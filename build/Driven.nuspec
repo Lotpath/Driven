@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://github.com/Lotpath/Driven/blob/develop/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/Lotpath/Driven/tree/develop</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <releaseNotes>First release.</releaseNotes>
+    <copyright>Copyright 2014</copyright>
+    <tags>.NET NEventStore Domain Kickstarter CQRS Event Sourcing</tags>
+    <dependencies>
+      <dependency id="NEventStore" version="[4.1.0.10]" />
+      <dependency id="CommonDomain" version="[1.6.0.3]" />
+    </dependencies>
+  </metadata>
+</package>

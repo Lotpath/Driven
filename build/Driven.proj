@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask AssemblyFile="$(MSBuildProjectDirectory)\..\src\packages\xunit.1.9.2\lib\net20\xunit.runner.msbuild.dll" TaskName="Xunit.Runner.MSBuild.xunit" />
+  
+  <Target Name="Build">
+    <MSBuild Projects="..\src\Driven.sln" Properties="Configuration=Debug"/>
+    <MSBuild Projects="..\src\Driven.sln" Properties="Configuration=Release"/>
+  </Target>
+  
+  <Target Name="Test">
+    <Xunit.Runner.MSBuild.xunit Assembly="$(MSBuildProjectDirectory)\..\src\Driven.Specs\bin\Release\Driven.Specs.dll" />
+  </Target>
+</Project>
