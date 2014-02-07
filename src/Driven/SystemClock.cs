@@ -9,6 +9,7 @@ namespace Driven
             Reset();
         }
 
+        public static DateTime Now { get { return UtcNowFunc().ToLocalTime(); } }
         public static DateTime UtcNow { get { return UtcNowFunc(); } }
         public static Func<DateTime> UtcNowFunc;
 
