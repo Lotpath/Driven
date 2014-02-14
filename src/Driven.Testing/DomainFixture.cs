@@ -86,6 +86,12 @@ namespace Driven.Testing
 
         private class FakeSecurityContext : ISecurityContext
         {
+            public FakeSecurityContext()
+            {
+                UserName = "test";
+                Claims = new string[0];
+            }
+
             public string UserName { get; set; }
             public IEnumerable<string> Claims { get; set; }
         }

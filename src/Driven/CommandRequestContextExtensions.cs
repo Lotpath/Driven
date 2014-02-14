@@ -38,24 +38,29 @@ namespace Driven
                 throw new CommandValidationException(errors);
         }
 
-        public static void RequireClaim(this ICommandRequestContext requestContext, string claim)
+        public static void RequireClaim(this ICommandRequestContext requestContext, string requiredClaim)
         {
-            if (!requestContext.SecurityContext.Claims.Any(x => x == claim))
-                throw new DomainSecurityException(claim);
+            if (!requestContext.CurrentClaims().Any(x => x == requiredClaim))
+                throw new DomainSecurityException(requiredClaim);
         }
 
-        public static void RequireAllClaims(this ICommandRequestContext requestContext, IEnumerable<string> claims)
+        public static void RequireAllClaims(this ICommandRequestContext requestContext, IEnumerable<string> requiredClaims)
         {
-            var claimsList = claims.ToList();
-            if (requestContext.SecurityContext.Claims.Intersect(claimsList).Count() != claimsList.Count())
+            var requiredClaimsList = requiredClaims.ToList();
+            if (requestContext.CurrentClaims().Intersect(requiredClaimsList).Count() != requiredClaimsList.Count())
+                throw new DomainSecurityException(requiredClaimsList);
+        }
+
+        public static void RequireAnyClaims(this ICommandRequestContext requestContext, IEnumerable<string> requiredClaims)
+        {
+            var claimsList = requiredClaims.ToList();
+            if (!requestContext.CurrentClaims().Intersect(claimsList).Any())
                 throw new DomainSecurityException(claimsList);
         }
 
-        public static void RequireAnyClaims(this ICommandRequestContext requestContext, IEnumerable<string> claims)
+        internal static IList<string> CurrentClaims(this ICommandRequestContext requestContext)
         {
-            var claimsList = claims.ToList();
-            if (!requestContext.SecurityContext.Claims.Intersect(claimsList).Any())
-                throw new DomainSecurityException(claimsList);
+            return (requestContext.SecurityContext.Claims ?? new string[0]).ToList();
         }
     }
 }
