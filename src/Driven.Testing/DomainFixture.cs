@@ -12,7 +12,8 @@ namespace Driven.Testing
     {
         private readonly IStoreEvents _eventStore;
         private readonly IRepository _repository;
-        private readonly FakeSecurityContext _securityContext;
+        private readonly FakeSecurityContext _defaultSecurityContext;
+        private  ICommandValidator _commandValidator;
         public Exception ThrownException = new Exception("No exception thrown");
         public IList<object> DispatchedEvents { get; private set; }
 
@@ -25,7 +26,8 @@ namespace Driven.Testing
 
         private DomainFixture()
         {
-            _securityContext = new FakeSecurityContext();
+            _defaultSecurityContext = new FakeSecurityContext();
+            _commandValidator = new DataAnnotationsCommandValidator();
 
             _eventStore = Wireup
                 .Init()
@@ -42,7 +44,7 @@ namespace Driven.Testing
         {
             try
             {
-                var context = new CommandRequestContext(_repository, _securityContext);
+                var context = new CommandRequestContext(_repository, _defaultSecurityContext, _commandValidator);
                 var service = serviceBuilder(context);
                 service.Execute(command);
             }
@@ -62,12 +64,17 @@ namespace Driven.Testing
 
         public void ConfigureUser(string userName)
         {
-            _securityContext.UserName = userName;
+            _defaultSecurityContext.UserName = userName;
         }
 
         public void ConfigureClaims(string[] claims)
         {
-            _securityContext.Claims = claims;
+            _defaultSecurityContext.Claims = claims;
+        }
+
+        public void UseValidator(ICommandValidator validator)
+        {
+            _commandValidator = validator;
         }
 
         private class FakeSecurityContext : ISecurityContext

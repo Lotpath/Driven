@@ -17,6 +17,12 @@ namespace Driven.Testing
             return fixture;
         }
 
+        public static DomainFixture WithCommandValidator(this DomainFixture fixture, ICommandValidator validator)
+        {
+            fixture.UseValidator(validator);
+            return fixture;
+        }
+
         public static void AssertDomainSecurityExceptionIsThrown(this DomainFixture fixture)
         {
             Assert.IsType<DomainSecurityException>(fixture.ThrownException);
