@@ -39,13 +39,20 @@ namespace Driven.Testing
             _repository = new EventStoreRepository(_eventStore, new AggregateConstructor(), new ConflictDetector());
         }
 
+        public TService ConstructService<TService>(Func<ICommandRequestContext, TService> serviceBuilder) 
+            where TService : IApplicationService
+        {
+            var context = new CommandRequestContext(_repository, _defaultSecurityContext, _commandValidator);
+            var service = serviceBuilder(context);
+            return service;
+        }
+
         public void Execute<TService>(Func<ICommandRequestContext, TService> serviceBuilder, object command)
             where TService : IApplicationService
         {
             try
             {
-                var context = new CommandRequestContext(_repository, _defaultSecurityContext, _commandValidator);
-                var service = serviceBuilder(context);
+                var service = ConstructService(serviceBuilder);
                 service.Execute(command);
             }
             catch (DomainSecurityException ex)
