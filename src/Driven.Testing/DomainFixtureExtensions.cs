@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using NEventStore.Dispatcher;
 using Xunit;
 
 namespace Driven.Testing
@@ -20,6 +21,12 @@ namespace Driven.Testing
         public static DomainFixture WithCommandValidator(this DomainFixture fixture, ICommandValidator validator)
         {
             fixture.UseValidator(validator);
+            return fixture;
+        }
+
+        public static DomainFixture WithDispatcher(this DomainFixture fixture, IDispatchCommits dispatcher)
+        {
+            fixture.UseDispatcher(dispatcher);
             return fixture;
         }
 

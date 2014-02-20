@@ -13,7 +13,8 @@ namespace Driven.Testing
         private readonly IStoreEvents _eventStore;
         private readonly IRepository _repository;
         private readonly FakeSecurityContext _defaultSecurityContext;
-        private  ICommandValidator _commandValidator;
+        private IDispatchCommits _dispatcher = new NullDispatcher();
+        private ICommandValidator _commandValidator;
         public Exception ThrownException = new Exception("No exception thrown");
         public IList<object> DispatchedEvents { get; private set; }
 
@@ -33,7 +34,11 @@ namespace Driven.Testing
                 .Init()
                 .UsingInMemoryPersistence()
                 .InitializeStorageEngine()
-                .UsingSynchronousDispatchScheduler(new DelegateMessageDispatcher(c => c.Events.ForEach(m => DispatchedEvents.Add(m.Body))))
+                .UsingSynchronousDispatchScheduler(new DelegateMessageDispatcher(c =>
+                    {
+                        _dispatcher.Dispatch(c);
+                        c.Events.ForEach(m => DispatchedEvents.Add(m.Body));
+                    }))
                 .Build();
 
             _repository = new EventStoreRepository(_eventStore, new AggregateConstructor(), new ConflictDetector());
@@ -77,6 +82,11 @@ namespace Driven.Testing
         public void ConfigureClaims(string[] claims)
         {
             _defaultSecurityContext.Claims = claims;
+        }
+
+        public void UseDispatcher(IDispatchCommits dispatcher)
+        {
+            _dispatcher = dispatcher;
         }
 
         public void UseValidator(ICommandValidator validator)

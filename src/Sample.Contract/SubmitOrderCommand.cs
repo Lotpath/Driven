@@ -13,7 +13,7 @@ namespace Sample.Contract
         public Guid CommandId { get; set; }
         public Guid CorrelationId { get; set; }
 
-        public List<OrderLineItem> Items { get; set; } 
+        public IList<OrderLineItem> Items { get; set; }
     }
 
     public class OrderLineItem
@@ -41,5 +41,20 @@ namespace Sample.Contract
         public Guid CorrelationId { get; private set; }
 
         public IList<OrderLineItem> Items { get; private set; }
+    }
+
+    public class OrderFulfillmentRoutingSlip
+    {
+        // order submitted
+
+        // future: (0) check pricing for ordered items
+        // future: (1) apply customer discounts (if any/if available)
+        // future: (2) check customer credit for order
+        
+        // (3) check available inventory for each ordered item/quantity
+        // (4) reserve inventory for each ordered item/quantity
+        
+        // future: if order is cancelled, unreserve inventory
+        public List<OrderLineItem> Items { get; set; } 
     }
 }

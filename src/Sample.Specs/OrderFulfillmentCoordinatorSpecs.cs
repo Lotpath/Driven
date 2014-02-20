@@ -1,6 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Driven;
 using Driven.Testing;
+using Moq;
+using NEventStore;
+using NEventStore.Dispatcher;
 using Sample.Contract;
 using Sample.Domain;
 using SubSpec;
@@ -13,14 +17,25 @@ namespace Sample.Specs
         public void test()
         {
             var fixture = default(DomainFixture);
-         
+            var dispatcher = new Mock<IDispatchCommits>();
+
             "Given the order fulfillment domain"
                 .Context(() =>
                     {
                         fixture = DomainFixture
                             .Init()
-                            .WithClaims(new[] { "Ordering" })
+                            .WithDispatcher(dispatcher.Object)
+                            .WithClaims(new[] { "Ordering" })                            
                             .WithUser("test");
+
+                        dispatcher.Setup(x => x.Dispatch(It.IsAny<Commit>()))
+                                  .Callback((Commit commit) =>
+                                      {
+                                          foreach (var e in commit.Events.Select(x => x.Body))
+                                          {
+                                              
+                                          }
+                                      });
                     });
 
             "when submitting an order"
