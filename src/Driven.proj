@@ -10,5 +10,6 @@
   
   <Target Name="Test">
     <Xunit.Runner.MSBuild.xunit Assembly="$(MSBuildProjectDirectory)\..\src\Driven.Specs\bin\Release\Driven.Specs.dll" />
+    <Xunit.Runner.MSBuild.xunit Assembly="$(MSBuildProjectDirectory)\..\src\Sample.Specs\bin\Release\Sample.Specs.dll" />
   </Target>
 </Project>

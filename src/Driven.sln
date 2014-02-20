@@ -17,6 +17,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Driven.Specs", "Driven.Specs\Driven.Specs.csproj", "{D12B698D-92A0-4016-8B41-CD2CABF81BB4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{57808F13-EC12-4776-AA3F-E8E7C59DAAD6}"
+	ProjectSection(SolutionItems) = preProject
+		Driven\Driven.nuspec = Driven\Driven.nuspec
+		Driven.proj = Driven.proj
+		Driven.Testing\Driven.Testing.nuspec = Driven.Testing\Driven.Testing.nuspec
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Driven.Testing", "Driven.Testing\Driven.Testing.csproj", "{7C09231B-6B97-4B26-82C7-2FB1D3A264CA}"
 EndProject
