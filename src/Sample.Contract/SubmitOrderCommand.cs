@@ -43,6 +43,12 @@ namespace Sample.Contract
         public IList<OrderLineItem> Items { get; private set; }
     }
 
+    public class ReserveInventoryForOrderComand : ICommand
+    {
+        public Guid CommandId { get; set; }
+        public Guid CorrelationId { get; set; }
+    }
+
     public class OrderFulfillmentRoutingSlip
     {
         // order submitted

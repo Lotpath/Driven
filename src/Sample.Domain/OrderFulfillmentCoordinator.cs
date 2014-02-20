@@ -36,7 +36,8 @@ namespace Sample.Domain
         public void Initialize(SubmitOrderCommand c)
         {
             RaiseEvent(new OrderSubmittedEvent(SequentialGuid.New(), c.CorrelationId, c.Items));
-        }    }
+        }   
+    }
 
     public class OrderFulfillmentState : RootEntityBase<OrderFulfillmentState>
     {
@@ -66,10 +67,5 @@ namespace Sample.Domain
         {
             RedirectToWhen.InvokeCommand(this, c);
         }
-    }
-
-    public class ReserveInventoryForOrderComand
-    {
-        
     }
 }

@@ -12,6 +12,7 @@ namespace Driven.Testing
     {
         private readonly IStoreEvents _eventStore;
         private readonly IRepository _repository;
+        private readonly ISagaRepository _sagaRepository;
         private readonly FakeSecurityContext _defaultSecurityContext;
         private IDispatchCommits _dispatcher = new NullDispatcher();
         private ICommandValidator _commandValidator;
@@ -42,12 +43,13 @@ namespace Driven.Testing
                 .Build();
 
             _repository = new EventStoreRepository(_eventStore, new AggregateConstructor(), new ConflictDetector());
+            _sagaRepository = new SagaEventStoreRepository(_eventStore);
         }
 
         public TService ConstructService<TService>(Func<ICommandRequestContext, TService> serviceBuilder) 
             where TService : IApplicationService
         {
-            var context = new CommandRequestContext(_repository, _defaultSecurityContext, _commandValidator);
+            var context = new CommandRequestContext(_repository, _sagaRepository, _defaultSecurityContext, _commandValidator);
             var service = serviceBuilder(context);
             return service;
         }

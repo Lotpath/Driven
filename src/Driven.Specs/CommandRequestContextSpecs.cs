@@ -18,7 +18,7 @@ namespace Driven.Specs
             "Given a command request context with null security claims"
                 .Context(() =>
                     {
-                        context = new CommandRequestContext(new Mock<IRepository>().Object, securityContext.Object);
+                        context = new CommandRequestContext(new Mock<IRepository>().Object, new Mock<ISagaRepository>().Object, securityContext.Object);
                         securityContext.Setup(x => x.Claims).Returns(() => null);
                     });
 

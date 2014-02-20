@@ -6,6 +6,24 @@ namespace Driven
 {
     public static class CommandRequestContextExtensions
     {
+        public static void Transition<TSaga>(this ICommandRequestContext context, Guid sagaId, object message)
+            where TSaga : class, ISaga, new()
+        {
+            var saga = GetSaga<TSaga>(context, sagaId);
+            saga.Transition(message);
+            context.SagaRepository.Save(saga, SequentialGuid.New(), headers =>
+                {
+                    headers.Add("ProcessedDateTimeUtc", SystemClock.UtcNow);
+                    headers.Add("UserName", context.SecurityContext.UserName);
+                });
+        }
+
+        private static TSaga GetSaga<TSaga>(ICommandRequestContext context, Guid sagaId)
+            where TSaga : class, ISaga, new()
+        {
+            return context.SagaRepository.GetById<TSaga>(sagaId);
+        }
+
         public static void Execute<TAggregate>(this ICommandRequestContext context, Guid aggregateId, Action<TAggregate> action)
             where TAggregate : class, IAggregate
         {
