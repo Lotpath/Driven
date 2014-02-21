@@ -3,25 +3,18 @@ using Sample.Contract;
 
 namespace Sample.Domain
 {
-    public class OrderFulfillmentService : IApplicationService
+    public class OrderFulfillmentModule : DrivenModule
     {
-        private readonly ICommandRequestContext _context;
-
-        public OrderFulfillmentService(ICommandRequestContext context)
+        public OrderFulfillmentModule()
         {
-            _context = context;
+            Handle<SubmitOrderCommand>(When);
         }
 
         public void When(SubmitOrderCommand c)
         {
-            _context.RequireClaim("Ordering");
-            _context.Validate(c);
-            _context.Execute<OrderFulfillmentCoordinator>(c.CorrelationId, a => a.Initialize(c));
-        }
-
-        public void Execute(object c)
-        {
-            RedirectToWhen.InvokeCommand(this, c);
+            this.RequireClaim("Ordering");
+            this.Validate(c);
+            this.Execute<OrderFulfillmentCoordinator>(c.CorrelationId, a => a.Initialize(c));
         }
     }
 
@@ -49,23 +42,11 @@ namespace Sample.Domain
         }
     }
 
-    public class ItemInventoryService : IApplicationService
+    public class ItemInventoryModule : DrivenModule
     {
-        private readonly ICommandRequestContext _context;
-
-        public ItemInventoryService(ICommandRequestContext context)
-        {
-            _context = context;
-        }
-
         public void When(ReserveInventoryForOrderComand c)
         {
             // place inventory on reserve or throw if insufficient inventory available?
-        }
-
-        public void Execute(object c)
-        {
-            RedirectToWhen.InvokeCommand(this, c);
         }
     }
 }

@@ -6,26 +6,27 @@ using Xunit;
 
 namespace Driven.Specs
 {
-    public class CommandRequestContextSpecs
+    public class DrivenContextSpecs
     {
         [Specification]
         public void NullSecurityClaimsTest()
         {
-            var context = default(CommandRequestContext);
+            var module = default(SecureModule);
             var securityContext = new Mock<ISecurityContext>();
             var thrownException = default(Exception);
 
             "Given a command request context with null security claims"
                 .Context(() =>
                     {
-                        context = new CommandRequestContext(new Mock<IRepository>().Object, new Mock<ISagaRepository>().Object, securityContext.Object);
+                        module = new SecureModule();
+                        module.Context = new DrivenContext(new Mock<IRepository>().Object, new Mock<ISagaRepository>().Object, securityContext.Object, new DataAnnotationsCommandValidator());
                         securityContext.Setup(x => x.Claims).Returns(() => null);
                     });
 
             "when checking claims security"
                 .Do(() =>
                     {
-                        context.RequireClaim("foo");
+                        module.When(new object());
                     }, (DomainSecurityException ex) => thrownException = ex);
 
             "then a domain security exception is thrown"
@@ -33,6 +34,14 @@ namespace Driven.Specs
                     {
                         Assert.IsType<DomainSecurityException>(thrownException);
                     });
+        }
+
+        public class SecureModule : DrivenModule
+        {
+            public void When(object message)
+            {
+                this.RequireClaim("foo");
+            }
         }
     }
 }

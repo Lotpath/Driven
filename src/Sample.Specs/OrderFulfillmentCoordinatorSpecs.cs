@@ -39,7 +39,10 @@ namespace Sample.Specs
                     });
 
             "when submitting an order"
-                .Do(() => fixture.Execute(ctx => new OrderFulfillmentService(ctx), new SubmitOrderCommand
+                .Do(() => fixture.Execute(ctx => new OrderFulfillmentModule
+                    {
+                        Context = ctx
+                    }, new SubmitOrderCommand
                     {
                         CommandId = SequentialGuid.New(),
                         CorrelationId = SequentialGuid.New(),

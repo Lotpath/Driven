@@ -47,7 +47,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommandRequestContextSpecs.cs" />
+    <Compile Include="DefaultDrivenBootstrapperSpecs.cs" />
+    <Compile Include="DrivenContextSpecs.cs" />
+    <Compile Include="DrivenEngineSpecs.cs" />
     <Compile Include="SpecificationExtensions.cs" />
     <Compile Include="SubSpec\SubSpec.cs" />
     <Compile Include="SubSpec\SubSpec.Thesis.cs" />

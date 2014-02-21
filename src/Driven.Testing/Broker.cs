@@ -15,20 +15,20 @@ namespace Driven.Testing
             _engine = _bootstrapper.GetEngine();
         }
 
-        public BrokerResponse HandleMessage(Action<BrokerContext> BrokerContext)
+        public BrokerResponse When<TMessage>(TMessage messageBody, Action<BrokerContext> brokerContext)
         {
-            var message = CreateMessage(BrokerContext);
+            var message = CreateMessage(messageBody, brokerContext);
 
             var response = new BrokerResponse(_engine.HandleMessage(message, context => context), this);
 
             return response;
         }
 
-        private Message CreateMessage(Action<BrokerContext> BrokerContext)
+        private Message CreateMessage(object message, Action<BrokerContext> brokerContext)
         {
             var context = new BrokerContext();
 
-            BrokerContext.Invoke(context);
+            brokerContext.Invoke(context);
 
             var contextValues = (IBrokerContextValues) context;
 

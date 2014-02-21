@@ -1,9 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Driven.Extensions;
 
 namespace Driven.Bootstrapper
 {
@@ -35,13 +34,13 @@ namespace Driven.Bootstrapper
         /// <summary>
         /// Indicates whether the all Assemblies, that references a Driven assembly, have already been loaded
         /// </summary>
-        private static bool DrivenReferencingAssembliesLoaded;
+        private static bool drivenReferencingAssembliesLoaded;
 
         private static IEnumerable<Func<Assembly, bool>> assembliesToScan;
 
         /// <summary>
         /// The default assemblies for scanning.
-        /// Includes the Driven assembly and anything referencing a Driven assembly
+        /// Includes the driven assembly and anything referencing a driven assembly
         /// </summary>
         public static Func<Assembly, bool>[] DefaultAssembliesToScan = new Func<Assembly, bool>[]
         {
@@ -55,7 +54,7 @@ namespace Driven.Bootstrapper
 
         /// <summary>
         /// Gets or sets a set of rules for which assemblies are scanned
-        /// Defaults to just assemblies that have references to Driven, and Driven
+        /// Defaults to just assemblies that have references to driven, and driven
         /// itself.
         /// Each item in the enumerable is a delegate that takes the assembly and 
         /// returns true if it is to be included. Returning false doesn't mean it won't
@@ -213,7 +212,7 @@ namespace Driven.Bootstrapper
         /// </summary>
         public static void LoadAssembliesWithDrivenReferences()
         {
-            if (DrivenReferencingAssembliesLoaded)
+            if (drivenReferencingAssembliesLoaded)
             {
                 return;
             }
@@ -260,7 +259,7 @@ namespace Driven.Bootstrapper
 
             UpdateTypes();
 
-            DrivenReferencingAssembliesLoaded = true;
+            drivenReferencingAssembliesLoaded = true;
         }
 
         /// <summary>
@@ -363,5 +362,41 @@ namespace Driven.Bootstrapper
         {
             return types.Where(t => !typeof(TType).IsAssignableFrom(t));
         }
+    }
+
+    public static class AssemblyExtensions
+    {
+        /// <summary>
+        /// Gets exported types from an assembly and catches common errors
+        /// that occur when running under test runners.
+        /// </summary>
+        /// <param name="assembly">Assembly to retreive from</param>
+        /// <returns>An array of types</returns>
+        public static Type[] SafeGetExportedTypes(this Assembly assembly)
+        {
+            Type[] types;
+
+            try
+            {
+                types = assembly.GetExportedTypes();
+            }
+            catch (FileNotFoundException)
+            {
+                types = new Type[] { };
+            }
+            catch (NotSupportedException)
+            {
+                types = new Type[] { };
+            }
+
+            return types;
+        }
+    }
+
+    public enum ScanMode
+    {
+        All,
+        OnlyDriven,
+        ExcludeDriven
     }
 }

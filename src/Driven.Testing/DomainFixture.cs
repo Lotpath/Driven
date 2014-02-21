@@ -46,21 +46,21 @@ namespace Driven.Testing
             _sagaRepository = new SagaEventStoreRepository(_eventStore);
         }
 
-        public TService ConstructService<TService>(Func<ICommandRequestContext, TService> serviceBuilder) 
-            where TService : IApplicationService
+        public TService ConstructService<TService>(Func<DrivenContext, TService> serviceBuilder) 
+            where TService : IDrivenModule
         {
-            var context = new CommandRequestContext(_repository, _sagaRepository, _defaultSecurityContext, _commandValidator);
+            var context = new DrivenContext(_repository, _sagaRepository, _defaultSecurityContext, _commandValidator);
             var service = serviceBuilder(context);
             return service;
         }
 
-        public void Execute<TService>(Func<ICommandRequestContext, TService> serviceBuilder, object command)
-            where TService : IApplicationService
+        public void Execute<TService>(Func<DrivenContext, TService> serviceBuilder, object command)
+            where TService : IDrivenModule
         {
             try
             {
                 var service = ConstructService(serviceBuilder);
-                service.Execute(command);
+                //service.Handle(command);
             }
             catch (DomainSecurityException ex)
             {

@@ -50,13 +50,8 @@
     <Compile Include="..\Driven\Properties\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Broker.cs" />
-    <Compile Include="BrokerContext.cs" />
-    <Compile Include="BrokerResponse.cs" />
-    <Compile Include="ConfigurableBootstrapper.cs" />
-    <Compile Include="DomainFixtureExtensions.cs" />
     <Compile Include="DomainFixture.cs" />
-    <Compile Include="IBrokerContextValues.cs" />
+    <Compile Include="DomainFixtureExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

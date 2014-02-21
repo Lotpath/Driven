@@ -1,8 +1,6 @@
-using System;
-
-namespace Driven.Bootstrapper
+﻿namespace Driven.Bootstrapper
 {
-    public interface IDrivenBootstrapper : IDisposable
+    public interface IDrivenBootstrapper
     {
         void Initialize();
         IDrivenEngine GetEngine();

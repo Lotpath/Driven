@@ -2,6 +2,6 @@
 {
     public interface IDrivenContextFactory
     {
-        DrivenContext Create(Message message);
+        DrivenContext Create(ISecurityContext securityContext);
     }
 }

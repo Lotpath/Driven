@@ -4,11 +4,12 @@ using System.Linq;
 
 namespace Driven
 {
-    public static class CommandRequestContextExtensions
+    public static class DrivenModuleExtensions
     {
-        public static void Transition<TSaga>(this ICommandRequestContext context, Guid sagaId, object message)
+        public static void Transition<TSaga>(this IDrivenModule module, Guid sagaId, object message)
             where TSaga : class, ISaga, new()
         {
+            var context = module.Context;
             var saga = GetSaga<TSaga>(context, sagaId);
             saga.Transition(message);
             context.SagaRepository.Save(saga, SequentialGuid.New(), headers =>
@@ -18,27 +19,28 @@ namespace Driven
                 });
         }
 
-        private static TSaga GetSaga<TSaga>(ICommandRequestContext context, Guid sagaId)
+        private static TSaga GetSaga<TSaga>(DrivenContext context, Guid sagaId)
             where TSaga : class, ISaga, new()
         {
             return context.SagaRepository.GetById<TSaga>(sagaId);
         }
 
-        public static void Execute<TAggregate>(this ICommandRequestContext context, Guid aggregateId, Action<TAggregate> action)
+        public static void Execute<TAggregate>(this IDrivenModule module, Guid aggregateId, Action<TAggregate> action)
             where TAggregate : class, IAggregate
         {
+            var context = module.Context;
             var aggregate = Get<TAggregate>(context, aggregateId);
             action(aggregate);
             Save(context, aggregate);
         }
 
-        private static TAggregate Get<TAggregate>(ICommandRequestContext context, Guid aggregateId)
+        private static TAggregate Get<TAggregate>(DrivenContext context, Guid aggregateId)
             where TAggregate : class, IAggregate
         {
             return context.Repository.GetById<TAggregate>(aggregateId);
         }
 
-        private static void Save<TAggregate>(ICommandRequestContext context, TAggregate aggregate)
+        private static void Save<TAggregate>(DrivenContext context, TAggregate aggregate)
             where TAggregate : class, IAggregate
         {
             context.Repository.Save(aggregate, SequentialGuid.New(), headers =>
@@ -48,36 +50,40 @@ namespace Driven
                 });
         }
 
-        public static void Validate(this ICommandRequestContext requestContext, object command)
+        public static void Validate(this IDrivenModule module, object command)
         {
-            var errors = requestContext.CommandValidator.Validate(command).ToList();
+            var context = module.Context;
+            var errors = context.CommandValidator.Validate(command).ToList();
             if (errors.Any())
                 throw new CommandValidationException(errors);
         }
 
-        public static void RequireClaim(this ICommandRequestContext requestContext, string requiredClaim)
+        public static void RequireClaim(this IDrivenModule module, string requiredClaim)
         {
-            if (!requestContext.CurrentClaims().Any(x => x == requiredClaim))
+            var context = module.Context;
+            if (!context.CurrentClaims().Any(x => x == requiredClaim))
                 throw new DomainSecurityException(requiredClaim);
         }
 
-        public static void RequireAllClaims(this ICommandRequestContext requestContext, IEnumerable<string> requiredClaims)
+        public static void RequireAllClaims(this IDrivenModule module, IEnumerable<string> requiredClaims)
         {
+            var context = module.Context;
             var requiredClaimsList = requiredClaims.ToList();
-            if (requestContext.CurrentClaims().Intersect(requiredClaimsList).Count() != requiredClaimsList.Count())
+            if (context.CurrentClaims().Intersect(requiredClaimsList).Count() != requiredClaimsList.Count())
                 throw new DomainSecurityException(requiredClaimsList);
         }
 
-        public static void RequireAnyClaims(this ICommandRequestContext requestContext, IEnumerable<string> requiredClaims)
+        public static void RequireAnyClaims(this IDrivenModule module, IEnumerable<string> requiredClaims)
         {
+            var context = module.Context;
             var claimsList = requiredClaims.ToList();
-            if (!requestContext.CurrentClaims().Intersect(claimsList).Any())
+            if (!context.CurrentClaims().Intersect(claimsList).Any())
                 throw new DomainSecurityException(claimsList);
         }
 
-        internal static IList<string> CurrentClaims(this ICommandRequestContext requestContext)
+        internal static IList<string> CurrentClaims(this DrivenContext context)
         {
-            return (requestContext.SecurityContext.Claims ?? new string[0]).ToList();
+            return (context.SecurityContext.Claims ?? new string[0]).ToList();
         }
     }
 }
