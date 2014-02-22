@@ -1,4 +1,6 @@
-﻿using CommonDomain;
+﻿using System.Collections.Generic;
+using System.Linq;
+using CommonDomain;
 using CommonDomain.Core;
 using CommonDomain.Persistence;
 using CommonDomain.Persistence.EventStore;
@@ -20,15 +22,30 @@ namespace Driven
         {
             container.Register<IDispatchCommits>((c, o) => new DelegateMessageDispatcher(commit => { }));
             container.Register((c, o) => ConfigureEventStore());
-            container.Register(typeof (IConstructAggregates), typeof (AggregateConstructor));
-            container.Register(typeof (IDetectConflicts), typeof (ConflictDetector));
-            container.Register(typeof (IRepository), typeof (EventStoreRepository));
+            container.Register(typeof(IConstructAggregates), typeof(AggregateConstructor));
+            container.Register(typeof(IDetectConflicts), typeof(ConflictDetector));
+            container.Register(typeof(IRepository), typeof(EventStoreRepository));
             container.Register(typeof(ISagaRepository), typeof(SagaEventStoreRepository));
             container.Register(typeof(ICommandValidator), typeof(DataAnnotationsCommandValidator));
             container.Register(typeof(ISecurityContext), typeof(EmptySecurityContext));
-            container.Register(typeof(IDrivenModuleResolver), typeof(DefaultDrivenModuleResolver));
             container.Register(typeof(IDrivenContextFactory), typeof(DefaultDrivenContextFactory));
             container.Register(typeof(IDrivenEngine), typeof(DrivenEngine));
+        }
+
+        protected override void RegisterBootstrapperTypes(TinyIoCContainer applicationContainer)
+        {
+            applicationContainer.Register<IDrivenModuleResolver>(this);
+        }
+
+        protected override IEnumerable<IDrivenModule> GetAllModules(TinyIoCContainer container)
+        {
+            var drivenModules = container.ResolveAll<IDrivenModule>();
+            return drivenModules;
+        }
+
+        protected override void RegisterModules(TinyIoCContainer container, IEnumerable<ModuleRegistration> moduleRegistrationTypes)
+        {
+            container.RegisterMultiple<IDrivenModule>(moduleRegistrationTypes.Select(x => x.ModuleType));
         }
 
         protected override IDrivenEngine GetEngineInternal()

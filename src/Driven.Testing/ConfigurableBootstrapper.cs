@@ -5,9 +5,9 @@ using Driven.Bootstrapper;
 
 namespace Driven.Testing
 {
-    public class ConfigurableBootstrapper : IDrivenBootstrapper
+    public class ConfigurableBootstrapper : DefaultDrivenBootstrapper
     {
-        private readonly List<object> registeredTypes;
+        private List<ModuleRegistration> _modules;
 
         public ConfigurableBootstrapper()
             : this(null)
@@ -23,21 +23,14 @@ namespace Driven.Testing
 
                 configuration.Invoke(configurator);
             }
-
         }
-
-        public void Dispose()
+        
+        protected override IEnumerable<ModuleRegistration> Modules
         {
-        }
-
-        public void Initialize()
-        {
-        }
-
-        public IDrivenEngine GetEngine()
-        {
-            var factory = new DefaultDrivenContextFactory();
-            return new DrivenEngine(factory);
+            get
+            {
+                return _modules ?? base.Modules;
+            }
         }
 
         public class ConfigurableBootstrapperConfigurator
@@ -49,14 +42,9 @@ namespace Driven.Testing
                 _bootstrapper = bootstrapper;
             }
 
-            public ConfigurableBootstrapperConfigurator Services(params Type[] services)
+            public ConfigurableBootstrapperConfigurator Modules(params Type[] modules)
             {
-                var serviceRegistrations =
-                    from service in services
-                    select new ServiceRegistration(service);
-
-                _bootstrapper.registeredTypes.AddRange(serviceRegistrations);
-
+                _bootstrapper._modules = modules.Select(x => new ModuleRegistration(x)).ToList();
                 return this;
             }
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Driven
 {
@@ -15,5 +16,10 @@ namespace Driven
         }
 
         public IEnumerable<MessageHandler> Handlers { get { return _handlers; } } 
+
+        public bool CanHandle(Type messageType)
+        {
+            return Handlers.Any(x => x.MessageType == messageType);
+        }
     }
 }

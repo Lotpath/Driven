@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Driven.Bootstrapper
 {
-    public abstract class DrivenBootstrapperBase<TContainer> : IDrivenBootstrapper
+    public abstract class DrivenBootstrapperBase<TContainer> : IDrivenBootstrapper, IDrivenModuleResolver
     {
         private bool _initialized;
+        private ModuleRegistration[] _modules;
 
         public void Initialize()
         {
@@ -12,7 +15,20 @@ namespace Driven.Bootstrapper
 
             ApplicationContainer = GetApplicationContainer();
 
+            RegisterBootstrapperTypes(ApplicationContainer);
+
             ConfigureApplicationContainer(ApplicationContainer);
+
+            RegisterModules(ApplicationContainer, Modules);
+        }
+
+        public DrivenModule Resolve(Type messageType)
+        {
+            var modules = GetAllModules(ApplicationContainer).Cast<DrivenModule>();
+            var module = modules.SingleOrDefault(x => x.CanHandle(messageType));
+            if (module == null)
+                throw new DrivenException("No registered module found for handling message {0}", messageType);
+            return module;
         }
 
         public IDrivenEngine GetEngine()
@@ -33,6 +49,24 @@ namespace Driven.Bootstrapper
 
         protected abstract void ConfigureApplicationContainer(TContainer container);
 
+        protected abstract void RegisterBootstrapperTypes(TContainer applicationContainer);
+
+        protected abstract IEnumerable<IDrivenModule> GetAllModules(TContainer container);
+
+        protected abstract void RegisterModules(TContainer container, IEnumerable<ModuleRegistration> moduleRegistrationTypes);
+
+        protected virtual IEnumerable<ModuleRegistration> Modules
+        {
+            get
+            {
+                return
+                    _modules ??
+                    (_modules = AppDomainAssemblyTypeScanner
+                                        .TypesOf<IDrivenModule>(ScanMode.ExcludeDriven)
+                                        .Select(t => new ModuleRegistration(t))
+                                        .ToArray());
+            }
+        }
         protected abstract IDrivenEngine GetEngineInternal();
 
         private IDrivenEngine SafeGetDrivenEngineInstance()

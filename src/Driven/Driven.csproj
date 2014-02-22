@@ -46,9 +46,9 @@
     <Compile Include="Bootstrapper\IDrivenBootstrapper.cs" />
     <Compile Include="Bootstrapper\IServiceProvider.cs" />
     <Compile Include="Bootstrapper\IServiceRegister.cs" />
+    <Compile Include="Bootstrapper\ModuleRegistration.cs" />
     <Compile Include="DefaultDrivenBootstrapper.cs" />
     <Compile Include="DefaultDrivenContextFactory.cs" />
-    <Compile Include="DefaultDrivenModuleResolver.cs" />
     <Compile Include="DrivenEngine.cs" />
     <Compile Include="DrivenException.cs" />
     <Compile Include="DrivenModule.cs" />
