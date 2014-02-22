@@ -20,7 +20,7 @@ namespace Driven
 
         protected override void ConfigureApplicationContainer(TinyIoCContainer container)
         {
-            container.Register<IDispatchCommits>((c, o) => new DelegateMessageDispatcher(commit => { }));
+            container.Register((c, o) => ConfigureDispatcher());
             container.Register((c, o) => ConfigureEventStore());
             container.Register(typeof(IConstructAggregates), typeof(AggregateConstructor));
             container.Register(typeof(IDetectConflicts), typeof(ConflictDetector));
@@ -60,7 +60,13 @@ namespace Driven
                 .UsingInMemoryPersistence()
                 .InitializeStorageEngine()
                 .UsingAsynchronousDispatchScheduler(ApplicationContainer.Resolve<IDispatchCommits>())
+                .HookIntoPipelineUsing(ApplicationContainer.ResolveAll<IPipelineHook>())
                 .Build();
+        }
+
+        protected virtual IDispatchCommits ConfigureDispatcher()
+        {
+            return new NullDispatcher();        
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Driven;
 using Driven.Testing;
+using NEventStore;
 using Sample.Contract;
 using Sample.Domain;
 using SubSpec;
@@ -13,7 +14,7 @@ namespace Sample.Specs
         public void test()
         {
             var harness = default(Harness);
-            //var dispatcher = new Mock<IDispatchCommits>();
+            var commit = default(Commit);
 
             "Given the order fulfillment domain"
                 .Context(() =>
@@ -21,6 +22,8 @@ namespace Sample.Specs
                         harness = new Harness(cfg =>
                             {
                                 cfg.Modules(typeof (OrderFulfillmentModule));
+                                cfg.Dispatcher(c => commit = c);
+                                cfg.WithClaims(new[] { });
                             });
 
                         //fixture = DomainFixture
