@@ -15,7 +15,7 @@ namespace Driven.Testing.Tests
         {
             AppDomainAssemblyTypeScanner.AssembliesToScan = new List<Func<Assembly, bool>>
                 {
-                    a => a.GetName().Name == "Driven.Testing.Tests"
+                    a => a == GetType().Assembly
                 };
 
             _bootstrapper = new ConfigurableBootstrapper(cfg =>
