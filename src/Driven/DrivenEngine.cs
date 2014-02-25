@@ -13,12 +13,12 @@ namespace Driven
             _contextFactory = contextFactory;
         }
 
-        public void HandleMessage<TMessage>(TMessage message)
+        public void HandleMessage<TMessage>(TMessage message, IDictionary<string, object> headers = null)
         {
-            // todo: need a way to determine the security context per message
-
+            headers = headers ?? new Dictionary<string, object>();
+ 
             var module = _moduleResolver.Resolve(message.GetType());
-            var context = _contextFactory.Create(new EmptySecurityContext());
+            var context = _contextFactory.Create(message, headers);
 
             module.Context = context;
 

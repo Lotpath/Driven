@@ -235,7 +235,7 @@ namespace Driven.Bootstrapper
                     {
                         inspectedAssembly = Assembly.ReflectionOnlyLoadFrom(unloadedAssembly);
                     }
-                    catch (BadImageFormatException biEx)
+                    catch (BadImageFormatException)
                     {
                         //the assembly maybe it's not managed code
                     }

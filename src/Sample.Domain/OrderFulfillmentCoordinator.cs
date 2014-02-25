@@ -12,8 +12,6 @@ namespace Sample.Domain
 
         public void When(SubmitOrderCommand c)
         {
-            this.RequireClaim("Ordering");
-            this.Validate(c);
             this.Execute<OrderFulfillmentCoordinator>(c.CorrelationId, a => a.Initialize(c));
         }
     }
@@ -23,7 +21,7 @@ namespace Sample.Domain
         public OrderFulfillmentCoordinator(OrderFulfillmentState state)
             : base(state)
         {
-            Register<OrderSubmittedEvent>();
+            Register<OrderSubmittedEvent>(RootEntity.When);
         }
 
         public void Initialize(SubmitOrderCommand c)
@@ -32,13 +30,13 @@ namespace Sample.Domain
         }   
     }
 
-    public class OrderFulfillmentState : RootEntityBase<OrderFulfillmentState>
+    public class OrderFulfillmentState : RootEntityBase
     {
-        private bool _orderSubmitted;
+        public bool OrderSubmitted { get; private set; }
 
-        private void When(OrderSubmittedEvent e)
+        public void When(OrderSubmittedEvent e)
         {
-            _orderSubmitted = true;
+            OrderSubmitted = true;
         }
     }
 

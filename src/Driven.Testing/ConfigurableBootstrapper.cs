@@ -10,7 +10,6 @@ namespace Driven.Testing
     public class ConfigurableBootstrapper : DefaultDrivenBootstrapper
     {
         private List<ModuleRegistration> _modules;
-        private Action<Commit> _dispatcher = c => { };
 
         public ConfigurableBootstrapper()
             : this(null)
@@ -23,7 +22,7 @@ namespace Driven.Testing
             {
                 var configurator = new ConfigurableBootstrapperConfigurator(this);
 
-                configuration.Invoke(configurator);
+                configuration.Invoke(configurator);                
             }
         }
 
@@ -35,9 +34,9 @@ namespace Driven.Testing
             }
         }
 
-        protected override IDispatchCommits ConfigureDispatcher()
+        public Commit GetLastCommit()
         {
-            return new DelegateMessageDispatcher(_dispatcher);
+            return LastCommit;
         }
 
         public class ConfigurableBootstrapperConfigurator
@@ -54,12 +53,6 @@ namespace Driven.Testing
                 _bootstrapper._modules = modules.Select(x => new ModuleRegistration(x)).ToList();
                 return this;
             }
-
-            public ConfigurableBootstrapperConfigurator Dispatcher(Action<Commit> dispatcher)
-            {
-                _bootstrapper._dispatcher = dispatcher;
-                return this;
-            }
-        }
+        }        
     }
 }

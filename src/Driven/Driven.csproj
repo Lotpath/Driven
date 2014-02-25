@@ -42,10 +42,7 @@
     <Compile Include="AggregateConstructor.cs" />
     <Compile Include="Bootstrapper\AppDomainAssemblyTypeScanner.cs" />
     <Compile Include="Bootstrapper\DrivenBootstrapperBase.cs" />
-    <Compile Include="Bootstrapper\IContainer.cs" />
     <Compile Include="Bootstrapper\IDrivenBootstrapper.cs" />
-    <Compile Include="Bootstrapper\IServiceProvider.cs" />
-    <Compile Include="Bootstrapper\IServiceRegister.cs" />
     <Compile Include="Bootstrapper\ModuleRegistration.cs" />
     <Compile Include="DefaultDrivenBootstrapper.cs" />
     <Compile Include="DefaultDrivenContextFactory.cs" />
@@ -54,8 +51,6 @@
     <Compile Include="DrivenModule.cs" />
     <Compile Include="DrivenContext.cs" />
     <Compile Include="DrivenModuleExtensions.cs" />
-    <Compile Include="CommandValidationException.cs" />
-    <Compile Include="DataAnnotationsCommandValidator.cs" />
     <Compile Include="DomainException.cs" />
     <Compile Include="DomainSecurityException.cs" />
     <Compile Include="DrivenContext.cs" />
@@ -69,14 +64,12 @@
     <Compile Include="IDrivenContextFactory.cs" />
     <Compile Include="IDrivenEngine.cs" />
     <Compile Include="IDrivenModule.cs" />
-    <Compile Include="ICommandValidator.cs" />
     <Compile Include="IDrivenModuleResolver.cs" />
     <Compile Include="IHideObjectMembers.cs" />
     <Compile Include="IRootEntity.cs" />
-    <Compile Include="ISecurityContext.cs" />
+    <Compile Include="Message.cs" />
     <Compile Include="MessageHandler.cs" />
     <Compile Include="Properties\CommonAssemblyInfo.cs" />
-    <Compile Include="RedirectToWhen.cs" />
     <Compile Include="RootEntityBase.cs" />
     <Compile Include="SequentialGuid.cs" />
     <Compile Include="SnapshotCalculator.cs" />

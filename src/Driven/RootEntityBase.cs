@@ -2,8 +2,7 @@
 
 namespace Driven
 {
-    public abstract class RootEntityBase<TRootEntity> : IRootEntity
-        where TRootEntity : RootEntityBase<TRootEntity>
+    public abstract class RootEntityBase : IRootEntity
     {
         private Guid _id;
         private int _version;
@@ -13,10 +12,5 @@ namespace Driven
 
         public Guid Id { get { return _id; } }
         public int Version { get { return _version; } }
-
-        void IRootEntity.Mutate(object e)
-        {
-            RedirectToWhen.InvokeEventOptional((TRootEntity)this, e);
-        }
     }
 }

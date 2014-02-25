@@ -11,6 +11,13 @@ namespace Driven
     {
         public IAggregate Build(Type type, Guid id, IMemento snapshot)
         {
+            var isValidAggregateType =
+                type.BaseType.IsGenericType &&
+                type.BaseType.GetGenericTypeDefinition() == typeof (AggregateBase<>);
+
+            if (!isValidAggregateType)
+                return null;
+
             var rootEntityType = type.BaseType.GenericTypeArguments[0];
             if (snapshot == null)
             {

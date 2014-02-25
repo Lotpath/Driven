@@ -47,8 +47,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AggregateConstructorSpecs.cs" />
     <Compile Include="DefaultDrivenBootstrapperSpecs.cs" />
-    <Compile Include="DrivenContextSpecs.cs" />
     <Compile Include="DrivenEngineSpecs.cs" />
     <Compile Include="SpecificationExtensions.cs" />
     <Compile Include="SubSpec\SubSpec.cs" />

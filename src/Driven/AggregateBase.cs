@@ -24,11 +24,6 @@ namespace Driven
         {
             return RootEntity;
         }
-
-        protected void Register<TEvent>()
-        {
-            Register<TEvent>(e => ((IRootEntity)RootEntity).Mutate(e));
-        }
     }
 
     public interface IMemento

@@ -1,4 +1,5 @@
-﻿using CommonDomain.Persistence;
+﻿using System.Collections.Generic;
+using CommonDomain.Persistence;
 
 namespace Driven
 {
@@ -6,26 +7,22 @@ namespace Driven
     {
         private readonly IRepository _repository;
         private readonly ISagaRepository _sagaRepository;
-        private readonly ICommandValidator _commandValidator;
 
-        public DefaultDrivenContextFactory(IRepository repository, ISagaRepository sagaRepository, ICommandValidator commandValidator)
+        public DefaultDrivenContextFactory(IRepository repository, ISagaRepository sagaRepository)
         {
             _repository = repository;
             _sagaRepository = sagaRepository;
-            _commandValidator = commandValidator;
         }
 
-        public DrivenContext Create(ISecurityContext securityContext)
+        public DrivenContext Create(object payload, IDictionary<string, object> headers)
         {
             var context = new DrivenContext();
-
-            context.SecurityContext = securityContext;
 
             context.Repository = _repository;
 
             context.SagaRepository = _sagaRepository;
-            
-            context.CommandValidator = _commandValidator;
+
+            context.Message = new Message(payload, headers);
                         
             return context;
         }
