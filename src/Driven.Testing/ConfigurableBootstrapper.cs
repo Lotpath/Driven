@@ -3,13 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using Driven.Bootstrapper;
 using NEventStore;
-using NEventStore.Dispatcher;
 
 namespace Driven.Testing
 {
-    public class ConfigurableBootstrapper : DefaultDrivenBootstrapper
+    public interface IFetchLastCommit
+    {
+        Commit GetLastCommit();
+    }
+
+    public class ConfigurableBootstrapper : DefaultDrivenBootstrapper, IFetchLastCommit
     {
         private List<ModuleRegistration> _modules;
+        private bool _allDiscoveredModules;
 
         public ConfigurableBootstrapper()
             : this(null)
@@ -30,11 +35,16 @@ namespace Driven.Testing
         {
             get
             {
-                return _modules ?? base.Modules;
+                if ((_modules ?? new List<ModuleRegistration>()).Any())
+                {
+                    return _modules;
+                }
+
+                return _allDiscoveredModules ? base.Modules : new ModuleRegistration[] { };
             }
         }
 
-        public Commit GetLastCommit()
+        Commit IFetchLastCommit.GetLastCommit()
         {
             return LastCommit;
         }
@@ -51,6 +61,12 @@ namespace Driven.Testing
             public ConfigurableBootstrapperConfigurator Modules(params Type[] modules)
             {
                 _bootstrapper._modules = modules.Select(x => new ModuleRegistration(x)).ToList();
+                return this;
+            }
+
+            public ConfigurableBootstrapperConfigurator AllDiscoveredModules()
+            {
+                _bootstrapper._allDiscoveredModules = true;
                 return this;
             }
         }        

@@ -34,7 +34,7 @@ namespace Driven.Testing
                     headers(dictionary);
                     _engine.HandleMessage(message, dictionary);
                 }
-                return new Result { Commit = _bootstrapper.GetLastCommit() };
+                return new Result { Commit = ((IFetchLastCommit)_bootstrapper).GetLastCommit() };
             }
             catch (DomainException ex)
             {
