@@ -13,14 +13,16 @@ namespace Driven.Testing.Tests
         }
 
         [Fact]
-        public void Should_be_able_to_send_message()
+        public void Should_be_able_to_send_message_and_retrieve_result()
         {
             var result = _harness.When(
                 new MyCommand
                     {
                         CommandId = SequentialGuid.New(),
                         CorrelationId = SequentialGuid.New()
-                    });            
+                    });
+
+            result.ShouldHaveEventOf<MyEvent>();
         }
 
         public class EchoModule : DrivenModule
