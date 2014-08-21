@@ -17,12 +17,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Driven.Specs", "Driven.Specs\Driven.Specs.csproj", "{D12B698D-92A0-4016-8B41-CD2CABF81BB4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{57808F13-EC12-4776-AA3F-E8E7C59DAAD6}"
-	ProjectSection(SolutionItems) = preProject
-		..\build\Driven.nuspec = ..\build\Driven.nuspec
-		..\build\Driven.proj = ..\build\Driven.proj
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Driven.Testing", "Driven.Testing\Driven.Testing.csproj", "{7C09231B-6B97-4B26-82C7-2FB1D3A264CA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Driven.Validation.DataAnnotations", "Driven.Validation.DataAnnotations\Driven.Validation.DataAnnotations.csproj", "{1D7FC0A6-4E69-40B7-A1DA-C66B1A0E0C49}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,6 +47,12 @@ Global
 		{7C09231B-6B97-4B26-82C7-2FB1D3A264CA}.Demo|Any CPU.Build.0 = Debug|Any CPU
 		{7C09231B-6B97-4B26-82C7-2FB1D3A264CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C09231B-6B97-4B26-82C7-2FB1D3A264CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D7FC0A6-4E69-40B7-A1DA-C66B1A0E0C49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D7FC0A6-4E69-40B7-A1DA-C66B1A0E0C49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D7FC0A6-4E69-40B7-A1DA-C66B1A0E0C49}.Demo|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D7FC0A6-4E69-40B7-A1DA-C66B1A0E0C49}.Demo|Any CPU.Build.0 = Debug|Any CPU
+		{1D7FC0A6-4E69-40B7-A1DA-C66B1A0E0C49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D7FC0A6-4E69-40B7-A1DA-C66B1A0E0C49}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -56,6 +60,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{ED638DD5-E755-4B7A-940D-5C94AB425686} = {7CA960F5-B4BF-4960-864B-8D42638A9C3D}
 		{7C09231B-6B97-4B26-82C7-2FB1D3A264CA} = {7CA960F5-B4BF-4960-864B-8D42638A9C3D}
+		{1D7FC0A6-4E69-40B7-A1DA-C66B1A0E0C49} = {7CA960F5-B4BF-4960-864B-8D42638A9C3D}
 		{D12B698D-92A0-4016-8B41-CD2CABF81BB4} = {9EA3F58E-8AB9-4956-B414-C4095CCD9667}
 	EndGlobalSection
 EndGlobal

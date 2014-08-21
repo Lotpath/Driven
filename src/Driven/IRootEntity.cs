@@ -1,6 +1,4 @@
-﻿using CommonDomain;
-
-namespace Driven
+﻿namespace Driven
 {
     public interface IRootEntity : IMemento
     {

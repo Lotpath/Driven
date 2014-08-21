@@ -1,9 +1,12 @@
 ﻿using System;
-using CommonDomain;
-using CommonDomain.Persistence;
 
 namespace Driven
 {
+    public interface IConstructAggregates
+    {
+        IAggregate Build(Type type, Guid id, IMemento snapshot);
+    }
+
     public class AggregateConstructor : IConstructAggregates
     {
         public IAggregate Build(Type type, Guid id, IMemento snapshot)

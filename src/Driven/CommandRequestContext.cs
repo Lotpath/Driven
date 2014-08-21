@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using CommonDomain.Persistence;
 
 namespace Driven
 {
@@ -9,7 +8,7 @@ namespace Driven
         {
             Repository = repository;
             SecurityContext = securityContext ?? new DefaultSecurityContext();
-            CommandValidator = commandValidator ?? new DataAnnotationsCommandValidator();
+            CommandValidator = commandValidator ?? new NulloCommandValidator();
         }
 
         public IRepository Repository { get; private set; }

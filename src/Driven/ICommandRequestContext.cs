@@ -1,6 +1,4 @@
-﻿using CommonDomain.Persistence;
-
-namespace Driven
+﻿namespace Driven
 {
     public interface ICommandRequestContext
     {
