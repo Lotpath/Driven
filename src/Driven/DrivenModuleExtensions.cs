@@ -21,7 +21,7 @@ namespace Driven
             var context = module.Context;
             var aggregate = context.Repository.GetById<TAggregate>(aggregateId);
             action(aggregate);
-            context.Repository.Save(aggregate, SequentialGuid.New(), headers => ConfigureHeaders(context.Message.Headers, headers));
+            context.Repository.Add(aggregate, SequentialGuid.New(), headers => ConfigureHeaders(context.Message.Headers, headers));
         }
 
         private static void ConfigureHeaders(IDictionary<string, object> source, IDictionary<string, object> target)

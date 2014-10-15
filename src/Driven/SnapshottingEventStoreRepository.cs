@@ -30,7 +30,7 @@ namespace Driven
         {
             throw new NotImplementedException();
             //var newEventsCount = aggregate.GetUncommittedEvents().Count;
-            //_repository.Save(aggregate, commitId, updateHeaders);
+            //_repository.Add(aggregate, commitId, updateHeaders);
             //if (ShouldSnapshot(aggregate, newEventsCount))
             //    _eventStore.Advanced.AddSnapshot(new Snapshot(aggregate.Id, aggregate.Version, aggregate.GetSnapshot()));
         }

@@ -1,20 +1,15 @@
-﻿using CommonDomain.Persistence;
-
-namespace Driven
+﻿namespace Driven
 {
     public class DrivenContext
     {
         public DrivenContext() { }
 
-        public DrivenContext(IRepository repository, ISagaRepository sagaRepository)
+        public DrivenContext(IRepository repository)
         {
             Repository = repository;
-            SagaRepository = sagaRepository;
         }
 
         public IRepository Repository { get; set; }
-        public ISagaRepository SagaRepository { get; set; }
-
         public Message Message { get; set; }
     }
 }
