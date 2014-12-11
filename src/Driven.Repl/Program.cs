@@ -33,15 +33,21 @@ namespace Driven.Repl
             var productRepo = new PostgreSQLJsonProductRepository(repo);
             var productManager = new ProductManager(productRepo);
 
-            var id = await productManager.CreateNewAsync(new TenantId(Guid.Empty), "widgets");
+            for (int i = 0; i < 10000; i++)
+            {
+                var id = await productManager.CreateNewAsync(new TenantId(Guid.Empty), "widgets");
 
-            var loadAll = productManager.LoadAllAsync(new TenantId(Guid.Empty));
-            var load = productManager.LoadAsync(new TenantId(Guid.Empty), id);
-            var find = productManager.FindAsync(new TenantId(Guid.Empty), "widgets");
+                Console.WriteLine("{0:00000} - {1}", i, id);
+            }
 
-            await Task.WhenAll(loadAll, load, find);
+            //await productManager.LoadAsync(new TenantId(Guid.Empty), id);
+            //await productManager.LoadAllAsync(new TenantId(Guid.Empty));
+            //await productManager.FindAsync(new TenantId(Guid.Empty), "widgets");
 
             //await bootstrapper.TearDownStore();
+
+            Console.WriteLine("Press a key to exit...");
+            Console.ReadKey();
         }
     }
 
