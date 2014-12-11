@@ -36,23 +36,23 @@ namespace Driven.Repl
   
         public async Task<IEnumerable<Product>> AllProductsOfTenantAsync(TenantId tenantId)
         {
-            var filter = "data->'_tenantId'->>'_identifier' = @0";
+            var filter = "data->'_tenantId'->>'_id' = @0";
 
-            return await _repository.FindAllAsync<Product>(filter, "", tenantId.Identifier);
+            return await _repository.FindAllAsync<Product>(filter, "", tenantId.Id());
         }
 
         public async Task<Product> ProductOfIdAsync(TenantId tenantId, ProductId productId)
         {
-            var filter = "data->'_tenantId'->>'_identifier' = @0 and data->'_productId'->>'_identifier' = @1";
+            var filter = "data->'_tenantId'->>'_id' = @0 and data->'_productId'->>'_id' = @1";
 
-            return await _repository.FindOneAsync<Product>(filter, tenantId.Identifier, productId.Identifier);
+            return await _repository.FindOneAsync<Product>(filter, tenantId.Id(), productId.Id());
         }
 
         public async Task<IEnumerable<Product>> ProductsOfNameAsync(TenantId tenantId, string name)
         {
-            var filter = "data->'_tenantId'->>'_identifier' = @0 and data->>'_name' = @1";
+            var filter = "data->'_tenantId'->>'_id' = @0 and data->>'_name' = @1";
 
-            return await _repository.FindAllAsync<Product>(filter, "", tenantId.Identifier, name);
+            return await _repository.FindAllAsync<Product>(filter, "", tenantId.Id(), name);
         }
     }
 }

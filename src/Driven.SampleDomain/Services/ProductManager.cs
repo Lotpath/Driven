@@ -12,27 +12,27 @@ namespace Driven.SampleDomain.Services
             _repository = repository;
         }
 
-        public async Task<ProductId> CreateNewAsync(TenantId tenantId, string name)
+        public async Task<string> CreateNewAsync(string tenantId, string name)
         {
-            var productId = new ProductId(Guid.NewGuid());
-            var product = new Product(tenantId, productId, name);
+            var productId = new ProductId(Guid.NewGuid().ToString().ToUpperInvariant());
+            var product = new Product(new TenantId(tenantId), productId, name);
             await _repository.SaveAsync(product);
-            return productId;
+            return productId.Id();
         }
 
-        public async Task LoadAllAsync(TenantId tenantId)
+        public async Task LoadAllAsync(string tenantId)
         {
-            var all = await _repository.AllProductsOfTenantAsync(tenantId);
+            var all = await _repository.AllProductsOfTenantAsync(new TenantId(tenantId));
         }
 
-        public async Task LoadAsync(TenantId tenantId, ProductId productId)
+        public async Task LoadAsync(string tenantId, string productId)
         {
-            var product = await _repository.ProductOfIdAsync(tenantId, productId);
+            var product = await _repository.ProductOfIdAsync(new TenantId(tenantId), new ProductId(productId));
         }
 
-        public async Task FindAsync(TenantId tenantId, string name)
+        public async Task FindAsync(string tenantId, string name)
         {
-            var product = await _repository.ProductsOfNameAsync(tenantId, name);
+            var product = await _repository.ProductsOfNameAsync(new TenantId(tenantId), name);
         }
     }
 }

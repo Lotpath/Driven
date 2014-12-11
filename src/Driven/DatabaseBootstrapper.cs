@@ -101,6 +101,25 @@ namespace Driven
             }
         }
 
+        public async Task ExecuteSql(string sql, params object[] args)
+        {
+            using (var conn = new NpgsqlConnection(_connectionStringProvider.Store))
+            {
+                await conn.OpenAsync();
+
+                using (var tran = conn.BeginTransaction())
+                {
+                    using (var cmd = conn.CreateCommand(sql, args))
+                    {
+                        cmd.Transaction = tran;
+                        cmd.ExecuteNonQuery();
+                    }
+                    
+                    tran.Commit();
+                }
+            }
+        }
+
         private async Task EnsureTableExists(NpgsqlConnection conn, NpgsqlTransaction tran, string tableName)
         {
             using (var cmd = conn.CreateCommand())

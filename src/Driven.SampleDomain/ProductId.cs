@@ -4,22 +4,46 @@ namespace Driven.SampleDomain
 {
     public class ProductId
     {
-        public ProductId()
-            : this(Guid.Empty)
+        private string _id;
+
+        public ProductId(string id) : this()
         {
+            SetId(id);
         }
 
-        public ProductId(Guid identifier)
+        public ProductId(ProductId id) : this()
         {
-            _identifier = "Product-" + identifier;
+            SetId(id._id);
         }
 
-        private readonly string _identifier;
-        public string Identifier { get { return _identifier; } }
+        private ProductId()
+        {
+        }
 
         public override string ToString()
         {
-            return _identifier;
+            return "ProductId [_id=" + _id + "]";
+        }
+
+        private void SetId(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new ArgumentException("The id must be provided.");
+            }
+
+            Guid parsed;
+            if (!Guid.TryParse(id, out parsed))
+            {
+                throw new ArgumentException("The id must be a valid Guid.");
+            }
+
+            _id = id;
+        }
+
+        public string Id()
+        {
+            return _id;
         }
     }
 }
