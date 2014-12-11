@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace Driven.SampleDomain
+namespace Driven.SampleDomain.Services
 {
     public class ProductManager
     {

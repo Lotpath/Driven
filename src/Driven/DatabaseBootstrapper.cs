@@ -83,7 +83,7 @@ namespace Driven
             }
         }
 
-        public async Task EnsureDocumentTablesExist(IEnumerable<string> tableNames)
+        public async Task EnsureTablesExist(EntityToTableNameMappingConfiguration configuration)
         {
             using (var conn = new NpgsqlConnection(_connectionStringProvider.Store))
             {
@@ -91,9 +91,9 @@ namespace Driven
 
                 using (var tran = conn.BeginTransaction())
                 {
-                    foreach (var tableName in tableNames)
+                    foreach (var tableName in configuration.GetAllTableNames())
                     {
-                        await EnsureDocumentTableExists(conn, tran, tableName);
+                        await EnsureTableExists(conn, tran, tableName);
                     }
 
                     tran.Commit();
@@ -101,7 +101,7 @@ namespace Driven
             }
         }
 
-        private async Task EnsureDocumentTableExists(NpgsqlConnection conn, NpgsqlTransaction tran, string tableName)
+        private async Task EnsureTableExists(NpgsqlConnection conn, NpgsqlTransaction tran, string tableName)
         {
             using (var cmd = conn.CreateCommand())
             {

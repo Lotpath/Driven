@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Driven.SampleDomain
+namespace Driven.SampleDomain.Services
 {
     public interface IProductRepository
     {

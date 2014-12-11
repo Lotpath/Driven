@@ -10,20 +10,22 @@ namespace Driven
     {
         private readonly ISerializer _serializer;
         private readonly ConnectionStringProvider _connectionStringProvider;
+        private readonly EntityToTableNameMappingConfiguration _mappingConfiguration;
 
-        public PostgreSQLJsonRepository(ISerializer serializer, ConnectionStringProvider connectionStringProvider)
+        public PostgreSQLJsonRepository(ISerializer serializer, ConnectionStringProvider connectionStringProvider, EntityToTableNameMappingConfiguration mappingConfiguration)
         {
             _serializer = serializer;
             _connectionStringProvider = connectionStringProvider;
+            _mappingConfiguration = mappingConfiguration;
         }
 
-        public async Task DeleteAsync(string tableName, IIdentifiable<long> aggregate)
+        public async Task DeleteAsync(IIdentifiable<long> aggregate)
         {
             try
             {
                 using (var uow = await BeginUnitOfWork())
                 {
-                    await DeleteAsync(uow, tableName, aggregate);
+                    await DeleteAsync(uow, aggregate);
 
                     uow.Commit();
                 }
@@ -34,7 +36,7 @@ namespace Driven
             }
         }
 
-        public async Task DeleteAsync(string tableName, IEnumerable<IIdentifiable<long>> aggregates)
+        public async Task DeleteAsync(IEnumerable<IIdentifiable<long>> aggregates)
         {
             try
             {
@@ -42,7 +44,7 @@ namespace Driven
                 {
                     foreach (var aggregate in aggregates)
                     {
-                        await DeleteAsync(uow, tableName, aggregate);
+                        await DeleteAsync(uow, aggregate);
                     }
 
                     uow.Commit();
@@ -54,7 +56,7 @@ namespace Driven
             }
         }
 
-        public async Task SaveAsync(string tableName, IIdentifiable<long> aggregate)
+        public async Task SaveAsync(IIdentifiable<long> aggregate)
         {
             try
             {
@@ -62,11 +64,11 @@ namespace Driven
                 {
                     if (aggregate.IsUnidentified())
                     {
-                        await InsertAsync(uow, tableName, aggregate);
+                        await InsertAsync(uow, aggregate);
                     }
                     else
                     {
-                        await UpdateAsync(uow, tableName, aggregate);
+                        await UpdateAsync(uow, aggregate);
                     }
 
                     uow.Commit();
@@ -78,7 +80,7 @@ namespace Driven
             }
         }
 
-        public async Task SaveAsync(string tableName, IEnumerable<IIdentifiable<long>> aggregates)
+        public async Task SaveAsync(IEnumerable<IIdentifiable<long>> aggregates)
         {
             try
             {
@@ -88,11 +90,11 @@ namespace Driven
                     {
                         if (aggregate.IsUnidentified())
                         {
-                            await InsertAsync(uow, tableName, aggregate);
+                            await InsertAsync(uow, aggregate);
                         }
                         else
                         {
-                            await UpdateAsync(uow, tableName, aggregate);
+                            await UpdateAsync(uow, aggregate);
                         }
                     }
 
@@ -105,17 +107,22 @@ namespace Driven
             }
         }
 
-        private async Task DeleteAsync(UnitOfWork unitOfWork, string tableName, IIdentifiable<long> aggregate)
+        private async Task DeleteAsync(UnitOfWork unitOfWork, IIdentifiable<long> aggregate)
         {
+            var tableName = GetTableName(aggregate.GetType());
+
             var commandText = string.Format("delete from {0} where id = @0", tableName);
+
             using (var command = unitOfWork.CreateCommand(commandText, aggregate.Identity()))
             {
                 await command.ExecuteNonQueryAsync();
             }
         }
 
-        private async Task InsertAsync(UnitOfWork unitOfWork, string tableName, IIdentifiable<long> aggregate)
+        private async Task InsertAsync(UnitOfWork unitOfWork, IIdentifiable<long> aggregate)
         {
+            var tableName = GetTableName(aggregate.GetType());
+
             var json = _serializer.Serialize(aggregate);
 
             var commandText = string.Format("insert into {0} (data) values (@0)", tableName);
@@ -126,8 +133,10 @@ namespace Driven
             }
         }
 
-        private async Task UpdateAsync(UnitOfWork unitOfWork, string tableName, IIdentifiable<long> aggregate)
+        private async Task UpdateAsync(UnitOfWork unitOfWork, IIdentifiable<long> aggregate)
         {
+            var tableName = GetTableName(aggregate.GetType());
+
             var json = _serializer.Serialize(aggregate);
 
             var commandText = string.Format("update {0} set data = @0 where id = @1", tableName);
@@ -186,10 +195,12 @@ namespace Driven
             }
         }
 
-        public async Task<IEnumerable<T>> FindAllAsync<T>(string tableName, string filter, string orderBy, params object[] args)
+        public async Task<IEnumerable<T>> FindAllAsync<T>(string filter, string orderBy, params object[] args)
             where T : IIdentifiable<long>
         {
             var aggregates = new List<T>();
+
+            var tableName = GetTableName(typeof(T));
 
             var query = string.Format("select id, data from {0} where {1} {2}", tableName, filter, orderBy);
 
@@ -224,10 +235,10 @@ namespace Driven
             return aggregates;
         }
 
-        public async Task<T> FindOneAsync<T>(string tableName, string filter, params object[] args)
+        public async Task<T> FindOneAsync<T>(string filter, params object[] args)
             where T : IIdentifiable<long>
         {
-            var aggregates = await FindAllAsync<T>(tableName, filter, "", args);
+            var aggregates = await FindAllAsync<T>(filter, "", args);
 
             return aggregates.FirstOrDefault();
         }
@@ -237,6 +248,11 @@ namespace Driven
             var connection = new NpgsqlConnection(_connectionStringProvider.Store);
             await connection.OpenAsync();
             return connection;
+        }
+        
+        private string GetTableName(Type type)
+        {
+            return _mappingConfiguration.GetTableName(type);
         }
     }
 }
