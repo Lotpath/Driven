@@ -10,30 +10,18 @@ namespace Driven
     {
         private readonly ISerializer _serializer;
         private readonly ConnectionStringProvider _connectionStringProvider;
-        private readonly EntityToTableNameMappingConfiguration _mappingConfiguration;
+        private readonly PersistenceConfiguration _configuration;
 
-        public PostgreSQLJsonRepository(ISerializer serializer, ConnectionStringProvider connectionStringProvider, EntityToTableNameMappingConfiguration mappingConfiguration)
+        public PostgreSQLJsonRepository(ISerializer serializer, ConnectionStringProvider connectionStringProvider, PersistenceConfiguration configuration)
         {
             _serializer = serializer;
             _connectionStringProvider = connectionStringProvider;
-            _mappingConfiguration = mappingConfiguration;
+            _configuration = configuration;
         }
 
         public async Task DeleteAsync(IIdentifiable<long> aggregate)
         {
-            try
-            {
-                using (var uow = await BeginUnitOfWork())
-                {
-                    await DeleteAsync(uow, aggregate);
-
-                    uow.Commit();
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new PersistenceException("Cannot delete: " + aggregate + " because: " + ex.Message);
-            }
+            await DeleteAsync(new[] {aggregate});
         }
 
         public async Task DeleteAsync(IEnumerable<IIdentifiable<long>> aggregates)
@@ -52,32 +40,13 @@ namespace Driven
             }
             catch (Exception ex)
             {
-                throw new PersistenceException("Cannot delete: " + aggregates + " because: " + ex.Message);
+                throw new PersistenceException("Cannot delete: " + ex.Message);
             }
         }
 
         public async Task SaveAsync(IIdentifiable<long> aggregate)
         {
-            try
-            {
-                using (var uow = await BeginUnitOfWork())
-                {
-                    if (aggregate.IsUnidentified())
-                    {
-                        await InsertAsync(uow, aggregate);
-                    }
-                    else
-                    {
-                        await UpdateAsync(uow, aggregate);
-                    }
-
-                    uow.Commit();
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new PersistenceException("Cannot save: " + aggregate + " because: " + ex.Message);
-            }
+            await SaveAsync(new[] {aggregate});
         }
 
         public async Task SaveAsync(IEnumerable<IIdentifiable<long>> aggregates)
@@ -103,7 +72,7 @@ namespace Driven
             }
             catch (Exception ex)
             {
-                throw new PersistenceException("Cannot save: " + aggregates + " because: " + ex.Message);
+                throw new PersistenceException("Cannot save: " + ex.Message);
             }
         }
 
@@ -252,7 +221,7 @@ namespace Driven
         
         private string GetTableName(Type type)
         {
-            return _mappingConfiguration.GetTableName(type);
+            return _configuration.GetTableName(type);
         }
     }
 }

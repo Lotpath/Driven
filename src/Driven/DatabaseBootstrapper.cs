@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Threading.Tasks;
 using Npgsql;
 
@@ -65,7 +64,7 @@ namespace Driven
                         cmd.Transaction = tran;
 
                         cmd.CommandText = "drop schema public cascade";
-                        
+
                         await cmd.ExecuteNonQueryAsync();
                     }
 
@@ -83,7 +82,7 @@ namespace Driven
             }
         }
 
-        public async Task EnsureTablesExist(EntityToTableNameMappingConfiguration configuration)
+        public async Task SchemaUpdate(PersistenceConfiguration configuration)
         {
             using (var conn = new NpgsqlConnection(_connectionStringProvider.Store))
             {
@@ -94,6 +93,11 @@ namespace Driven
                     foreach (var tableName in configuration.GetAllTableNames())
                     {
                         await EnsureTableExists(conn, tran, tableName);
+                    }
+
+                    foreach (var index in configuration.GetIndexDefinitions())
+                    {
+                        await EnsureIndexExists(conn, tran, index.Key, index.Value);
                     }
 
                     tran.Commit();
@@ -114,7 +118,7 @@ namespace Driven
                         cmd.Transaction = tran;
                         cmd.ExecuteNonQuery();
                     }
-                    
+
                     tran.Commit();
                 }
             }
@@ -122,17 +126,31 @@ namespace Driven
 
         private async Task EnsureTableExists(NpgsqlConnection conn, NpgsqlTransaction tran, string tableName)
         {
-            using (var cmd = conn.CreateCommand())
+            using (var cmd = conn.CreateCommand("select count(*) from information_schema.tables where table_schema='public' and table_name=:0", tableName))
+            {
+                cmd.Transaction = tran;
+                
+                var exists = (long)await cmd.ExecuteScalarAsync() != 0;
+
+                if (exists)
+                {
+                    return;
+                }
+            }
+
+            using (var cmd = conn.CreateCommand(string.Format("create table {0} (id bigserial primary key, data json not null);", tableName)))
             {
                 cmd.Transaction = tran;
 
-                cmd.CommandText = "select count(*) from information_schema.tables where table_schema='public' and table_name=:0";
-                var p = cmd.CreateParameter();
-                p.ParameterName = "0";
-                p.DbType = DbType.AnsiString;
-                p.Value = tableName;
-                cmd.Parameters.Add(p);
-                cmd.CommandType = CommandType.Text;
+                await cmd.ExecuteNonQueryAsync();
+            }
+        }
+
+        private async Task EnsureIndexExists(NpgsqlConnection conn, NpgsqlTransaction tran, string indexName, string index)
+        {
+            using (var cmd = conn.CreateCommand("select count(*) from pg_indexes where schemaname='public' and indexname=:0", indexName))
+            {
+                cmd.Transaction = tran;
 
                 var exists = (long)await cmd.ExecuteScalarAsync() != 0;
 
@@ -142,11 +160,9 @@ namespace Driven
                 }
             }
 
-            using (var cmd = conn.CreateCommand())
+            using (var cmd = conn.CreateCommand(index))
             {
                 cmd.Transaction = tran;
-
-                cmd.CommandText = string.Format("create table {0} (id bigserial primary key, data json not null);", tableName);
 
                 await cmd.ExecuteNonQueryAsync();
             }

@@ -22,23 +22,27 @@ namespace Driven.Repl
             {
                 await bootstrapper.InitializeStore();
             }
-            
+
             await bootstrapper.TearDownStore();
 
-            var mappingConfiguration = new EntityToTableNameMappingConfiguration(
+            var configuration = new PersistenceConfiguration(
                 cfg =>
-                cfg.Map<Product>("tbl_products"));
+                    {
+                        cfg.Map<Product>("tbl_products")
+                           .Index<Product>("tbl_products_tenant_id_product_id_index",
+                                           "((data->'_tenantId'->>'_id'), (data->'_productId'->>'_id'))");
+                    });
 
-            await bootstrapper.EnsureTablesExist(mappingConfiguration);
-            await bootstrapper.ExecuteSql("CREATE INDEX tbl_products_tenant_id_product_id_index ON tbl_products ((data->'_tenantId'->>'_id'), (data->'_productId'->>'_id'));");
+            await bootstrapper.SchemaUpdate(configuration);
 
-            var repo = new PostgreSQLJsonRepository(new NewtonsoftJsonSerializer(), new ConnectionStringProvider(), mappingConfiguration);
+            var repo = new PostgreSQLJsonRepository(new NewtonsoftJsonSerializer(), new ConnectionStringProvider(), configuration);
             var productRepo = new PostgreSQLJsonProductRepository(repo);
             var productManager = new ProductManager(productRepo);
 
             var ids = new List<string>();
 
-            for (int i = 0; i < 1000; i++)
+            var itemCount = 1000;
+            for (int i = 0; i < itemCount; i++)
             {
                 var id = await productManager.CreateNewAsync(Guid.Empty.ToString(), "widgets");
 
@@ -47,18 +51,22 @@ namespace Driven.Repl
                 Console.WriteLine("{0:00000} - {1}", i, id);
             }
 
-            var start = DateTime.UtcNow;
-
+            var timer = new Timer();
             foreach (var id in ids)
             {
                 await productManager.LoadAsync(Guid.Empty.ToString(), id);
             }
+            var interval = timer.Interval;
+            Console.WriteLine("Time to load each individually: {0}", interval);
+            Console.WriteLine("Average load time: {0:0.0000} seconds", interval.TotalSeconds / itemCount);
 
-            var interval = DateTime.UtcNow - start;
-            Console.WriteLine("Time to load: {0}", interval);
+            timer.Restart();
+            await productManager.LoadAllAsync(Guid.Empty.ToString());
+            Console.WriteLine("Time to load all: {0}", timer.Interval);
 
-            //await productManager.LoadAllAsync(new TenantId(Guid.Empty));
-            //await productManager.FindAsync(new TenantId(Guid.Empty), "widgets");
+            timer.Restart();
+            await productManager.FindAsync(Guid.Empty.ToString(), "widgets");
+            Console.WriteLine("Time to find by name: {0}", timer.Interval);
 
             //await bootstrapper.TearDownStore();
 
@@ -67,5 +75,19 @@ namespace Driven.Repl
         }
     }
 
+    public class Timer
+    {
+        public Timer()
+        {
+            Start = DateTime.UtcNow;
+        }
 
+        public DateTime Start { get; private set; }
+        public TimeSpan Interval { get { return DateTime.UtcNow - Start; } }
+
+        public void Restart()
+        {
+            Start = DateTime.UtcNow;
+        }
+    }
 }

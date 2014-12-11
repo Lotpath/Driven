@@ -53,7 +53,7 @@
     </Compile>
     <Compile Include="ConnectionStringProvider.cs" />
     <Compile Include="DatabaseBootstrapper.cs" />
-    <Compile Include="EntityToTableNameMappingConfiguration.cs" />
+    <Compile Include="PersistenceConfiguration.cs" />
     <Compile Include="IIdentifiable.cs" />
     <Compile Include="ISerializer.cs" />
     <Compile Include="NewtonsoftJsonSerializer.cs" />
