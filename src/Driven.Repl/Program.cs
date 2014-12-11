@@ -16,7 +16,17 @@ namespace Driven.Repl
 
         private static async Task Run()
         {
-            var bootstrapper = new DatabaseBootstrapper(new ConnectionStringProvider());
+            var configuration = new PersistenceConfiguration(
+                cfg =>
+                    {
+                        cfg.UseConnectionStringsFromAppConfig();
+                        cfg.Serializer(new NewtonsoftJsonSerializer());
+                        cfg.Map<Product>("tbl_products")
+                           .Index<Product>("tbl_products_tenant_id_product_id_index",
+                                           "((data->'_tenantId'->>'_id'), (data->'_productId'->>'_id'))");
+                    });
+
+            var bootstrapper = new DatabaseBootstrapper(configuration);
 
             if (!await bootstrapper.StoreExists())
             {
@@ -25,17 +35,9 @@ namespace Driven.Repl
 
             await bootstrapper.TearDownStore();
 
-            var configuration = new PersistenceConfiguration(
-                cfg =>
-                    {
-                        cfg.Map<Product>("tbl_products")
-                           .Index<Product>("tbl_products_tenant_id_product_id_index",
-                                           "((data->'_tenantId'->>'_id'), (data->'_productId'->>'_id'))");
-                    });
+            await bootstrapper.EnsureSchemaIsUpToDate();
 
-            await bootstrapper.SchemaUpdate(configuration);
-
-            var repo = new PostgreSQLJsonRepository(new NewtonsoftJsonSerializer(), new ConnectionStringProvider(), configuration);
+            var repo = new PostgreSQLJsonRepository(configuration);
             var productRepo = new PostgreSQLJsonProductRepository(repo);
             var productManager = new ProductManager(productRepo);
 

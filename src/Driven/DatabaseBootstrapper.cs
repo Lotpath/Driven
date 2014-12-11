@@ -6,18 +6,18 @@ namespace Driven
 {
     public class DatabaseBootstrapper
     {
-        private readonly ConnectionStringProvider _connectionStringProvider;
+        private readonly PersistenceConfiguration _configuration;
 
-        public DatabaseBootstrapper(ConnectionStringProvider connectionStringProvider)
+        public DatabaseBootstrapper(PersistenceConfiguration configuration)
         {
-            _connectionStringProvider = connectionStringProvider;
+            _configuration = configuration;
         }
 
         public async Task<bool> StoreExists()
         {
-            var storeDatabaseName = new NpgsqlConnectionStringBuilder(_connectionStringProvider.Store).Database;
+            var storeDatabaseName = new NpgsqlConnectionStringBuilder(_configuration.StoreConnectionString).Database;
 
-            using (var conn = new NpgsqlConnection(_connectionStringProvider.Master))
+            using (var conn = new NpgsqlConnection(_configuration.MasterConnectionString))
             {
                 await conn.OpenAsync();
 
@@ -37,9 +37,9 @@ namespace Driven
 
         public async Task InitializeStore()
         {
-            var storeDatabaseName = new NpgsqlConnectionStringBuilder(_connectionStringProvider.Store).Database;
+            var storeDatabaseName = new NpgsqlConnectionStringBuilder(_configuration.StoreConnectionString).Database;
 
-            using (var conn = new NpgsqlConnection(_connectionStringProvider.Master))
+            using (var conn = new NpgsqlConnection(_configuration.MasterConnectionString))
             {
                 await conn.OpenAsync();
 
@@ -53,7 +53,7 @@ namespace Driven
 
         public async Task TearDownStore()
         {
-            using (var conn = new NpgsqlConnection(_connectionStringProvider.Store))
+            using (var conn = new NpgsqlConnection(_configuration.StoreConnectionString))
             {
                 await conn.OpenAsync();
 
@@ -82,20 +82,20 @@ namespace Driven
             }
         }
 
-        public async Task SchemaUpdate(PersistenceConfiguration configuration)
+        public async Task EnsureSchemaIsUpToDate()
         {
-            using (var conn = new NpgsqlConnection(_connectionStringProvider.Store))
+            using (var conn = new NpgsqlConnection(_configuration.StoreConnectionString))
             {
                 await conn.OpenAsync();
 
                 using (var tran = conn.BeginTransaction())
                 {
-                    foreach (var tableName in configuration.GetAllTableNames())
+                    foreach (var tableName in _configuration.GetAllTableNames())
                     {
                         await EnsureTableExists(conn, tran, tableName);
                     }
 
-                    foreach (var index in configuration.GetIndexDefinitions())
+                    foreach (var index in _configuration.GetIndexDefinitions())
                     {
                         await EnsureIndexExists(conn, tran, index.Key, index.Value);
                     }
@@ -107,7 +107,7 @@ namespace Driven
 
         public async Task ExecuteSql(string sql, params object[] args)
         {
-            using (var conn = new NpgsqlConnection(_connectionStringProvider.Store))
+            using (var conn = new NpgsqlConnection(_configuration.StoreConnectionString))
             {
                 await conn.OpenAsync();
 

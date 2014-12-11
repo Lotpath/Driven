@@ -8,15 +8,15 @@ namespace Driven
 {
     public class PostgreSQLJsonRepository
     {
-        private readonly ISerializer _serializer;
-        private readonly ConnectionStringProvider _connectionStringProvider;
         private readonly PersistenceConfiguration _configuration;
+        private readonly ISerializer _serializer;
+        private readonly string _connectionString;
 
-        public PostgreSQLJsonRepository(ISerializer serializer, ConnectionStringProvider connectionStringProvider, PersistenceConfiguration configuration)
+        public PostgreSQLJsonRepository(PersistenceConfiguration configuration)
         {
-            _serializer = serializer;
-            _connectionStringProvider = connectionStringProvider;
             _configuration = configuration;
+            _serializer = _configuration.Serializer;
+            _connectionString = _configuration.StoreConnectionString;
         }
 
         public async Task DeleteAsync(IIdentifiable<long> aggregate)
@@ -118,7 +118,7 @@ namespace Driven
 
         private async Task<UnitOfWork> BeginUnitOfWork()
         {
-            var uow = new UnitOfWork(_connectionStringProvider.Store);
+            var uow = new UnitOfWork(_connectionString);
             await uow.Begin();
             return uow;
         }
@@ -214,7 +214,7 @@ namespace Driven
 
         private async Task<NpgsqlConnection> OpenConnection()
         {
-            var connection = new NpgsqlConnection(_connectionStringProvider.Store);
+            var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
             return connection;
         }

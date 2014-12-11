@@ -51,7 +51,6 @@
     <Compile Include="..\SolutionInfo.cs">
       <Link>Properties\SolutionInfo.cs</Link>
     </Compile>
-    <Compile Include="ConnectionStringProvider.cs" />
     <Compile Include="DatabaseBootstrapper.cs" />
     <Compile Include="PersistenceConfiguration.cs" />
     <Compile Include="IIdentifiable.cs" />

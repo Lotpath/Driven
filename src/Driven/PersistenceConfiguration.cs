@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Configuration;
 using System.Linq;
+using Npgsql;
 
 namespace Driven
 {
@@ -11,7 +13,10 @@ namespace Driven
             = new Dictionary<Type, string>();
 
         private readonly List<IndexDefinition> _indexDefinitions
-            = new List<IndexDefinition>(); 
+            = new List<IndexDefinition>();
+
+        private ISerializer _serializer;
+        private ConnectionStringProvider _connectionStringProvider;
 
         public PersistenceConfiguration(Action<PersistenceConfigurationConfigurer> cfg)
         {
@@ -46,6 +51,18 @@ namespace Driven
             return _entityTypeToTableNameMappings[typeof(T)];
         }
 
+        public string MasterConnectionString
+        {
+            get { return _connectionStringProvider.Master; }
+        }
+
+        public string StoreConnectionString
+        {
+            get { return _connectionStringProvider.Store; }
+        }
+
+        public ISerializer Serializer { get { return _serializer; } }
+
         public class PersistenceConfigurationConfigurer
         {
             private readonly PersistenceConfiguration _configuration;
@@ -79,6 +96,18 @@ namespace Driven
                 _configuration._indexDefinitions.Add(definition);
                 return this;
             }
+
+            public PersistenceConfigurationConfigurer Serializer(ISerializer serializer)
+            {
+                _configuration._serializer = serializer;
+                return this;
+            }
+
+            public PersistenceConfigurationConfigurer UseConnectionStringsFromAppConfig()
+            {
+                _configuration._connectionStringProvider = new ConnectionStringProvider();
+                return this;
+            }
         }
 
         private class IndexDefinition
@@ -86,6 +115,18 @@ namespace Driven
             public string TableName { get; set; }
             public string IndexName { get; set; }
             public string Index { get; set; }
+        }
+
+        public class ConnectionStringProvider
+        {
+            public ConnectionStringProvider()
+            {
+                Master = ConfigurationManager.ConnectionStrings["Master"].ConnectionString;
+                Store = ConfigurationManager.ConnectionStrings["Store"].ConnectionString;
+            }
+
+            public string Master { get; set; }
+            public string Store { get; set; }
         }
     }
 }
