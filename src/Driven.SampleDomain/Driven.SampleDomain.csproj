@@ -47,12 +47,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TenantId.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Driven\Driven.csproj">
-      <Project>{ed638dd5-e755-4b7a-940d-5c94ab425686}</Project>
-      <Name>Driven</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

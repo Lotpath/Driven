@@ -48,11 +48,11 @@ namespace Driven.Repl
             return await _repository.FindOneAsync<Product>(filter, tenantId.Id(), productId.Id());
         }
 
-        public async Task<IEnumerable<Product>> ProductsOfNameAsync(TenantId tenantId, string name)
+        public async Task<IEnumerable<Product>> ProductsOfNameAsync(TenantId tenantId, ProductName productName)
         {
-            var filter = "data->'_tenantId'->>'_id' = @0 and data->>'_name' = @1";
+            var filter = "data->'_tenantId'->>'_id' = @0 and data->'_productName'->>'_name' = @1";
 
-            return await _repository.FindAllAsync<Product>(filter, "", tenantId.Id(), name);
+            return await _repository.FindAllAsync<Product>(filter, "", tenantId.Id(), productName.Name);
         }
     }
 }

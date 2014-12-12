@@ -3,10 +3,86 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Linq;
-using Npgsql;
+using System.Reflection;
 
 namespace Driven
 {
+    public interface IIdentityAdapter
+    {
+        void SetIdentity(object target, long value);
+        long GetIdentity(object target);
+        bool IsUnidentified(object target);
+    }
+
+    public class ReflectionIdentityAdapter : IIdentityAdapter
+    {
+        private readonly IIdentityAdapter _adapter;
+
+        public ReflectionIdentityAdapter(Type type)
+        {
+            var methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+            var get = methods.SingleOrDefault(x => x.Name == "GetIdentity");
+            var set = methods.SingleOrDefault(x => x.Name == "SetIdentity");
+
+            if (get == null || get.ReturnType != typeof(long))
+            {
+                throw new ArgumentException("Method with signature 'long GetIdentity()' not found");
+            }
+
+            if (set == null || set.GetParameters().ToList()[0].ParameterType != typeof(long))
+            {
+                throw new ArgumentException("Method with signature 'SetIdentity(long)' not found");
+            }
+
+            _adapter = new DelegateIdentityAdapter(
+                o => (long) get.Invoke(o, new object[0]),
+                (o, id) => set.Invoke(o, new object[] {id}));
+        }
+
+        public void SetIdentity(object target, long value)
+        {
+            _adapter.SetIdentity(target, value);
+        }
+
+        public long GetIdentity(object target)
+        {
+            return _adapter.GetIdentity(target);
+        }
+
+        public bool IsUnidentified(object target)
+        {
+            return _adapter.IsUnidentified(target);
+        }
+    }
+
+    public class DelegateIdentityAdapter : IIdentityAdapter
+    {
+        private Action<object, long> _setIdentity;
+        private Func<object, long> _getIdentity;
+
+        public DelegateIdentityAdapter(Func<object, long> getIdentity, Action<object, long> setIdentity)
+        {
+            _getIdentity = getIdentity;
+            _setIdentity = setIdentity;
+        }
+
+        public void SetIdentity(object target, long value)
+        {
+            _setIdentity(target, value);
+        }
+
+        public long GetIdentity(object target)
+        {
+            return _getIdentity(target);
+        }
+
+        public bool IsUnidentified(object target)
+        {
+            return GetIdentity(target) <= 0;
+        }
+    }
+
     public class PersistenceConfiguration
     {
         private readonly Dictionary<Type, string> _entityTypeToTableNameMappings
@@ -14,6 +90,9 @@ namespace Driven
 
         private readonly List<IndexDefinition> _indexDefinitions
             = new List<IndexDefinition>();
+
+        private readonly Dictionary<Type, IIdentityAdapter> _idAdapters
+            = new Dictionary<Type, IIdentityAdapter>();
 
         private ISerializer _serializer;
         private ConnectionStringProvider _connectionStringProvider;
@@ -51,6 +130,11 @@ namespace Driven
             return _entityTypeToTableNameMappings[typeof(T)];
         }
 
+        public IIdentityAdapter GetIdAdapter(Type type)
+        {
+            return _idAdapters[type];
+        }
+
         public string MasterConnectionString
         {
             get { return _connectionStringProvider.Master; }
@@ -72,15 +156,25 @@ namespace Driven
                 _configuration = configuration;
             }
 
-            public PersistenceConfigurationConfigurer Map(Type type, string tableName)
+            public PersistenceConfigurationConfigurer Map<T>(string tableName, Func<T, long> getId = null, Action<T, long> setId = null)
             {
-                _configuration._entityTypeToTableNameMappings.Add(type, tableName);
-                return this;
-            }
+                if (getId == null && setId == null)
+                {
+                    _configuration._idAdapters.Add(typeof(T), new ReflectionIdentityAdapter(typeof(T)));
+                }
+                else if (getId != null && setId != null)
+                {
+                    _configuration._idAdapters
+                                  .Add(typeof (T),
+                                       new DelegateIdentityAdapter(o => getId((T) o), (o, id) => setId((T) o, id)));
+                }
+                else
+                {
+                    throw new ArgumentException("getId and setId must both have a value, or both be null");
+                }
 
-            public PersistenceConfigurationConfigurer Map<T>(string tableName)
-            {
                 _configuration._entityTypeToTableNameMappings.Add(typeof(T), tableName);
+                
                 return this;
             }
 
@@ -108,6 +202,20 @@ namespace Driven
                 _configuration._connectionStringProvider = new ConnectionStringProvider();
                 return this;
             }
+
+            public PersistenceConfigurationConfigurer UseMasterConnectionString(string connectionString)
+            {
+                _configuration._connectionStringProvider = (_configuration._connectionStringProvider ??new ConnectionStringProvider());
+                _configuration._connectionStringProvider.Master = connectionString;
+                return this;
+            }
+
+            public PersistenceConfigurationConfigurer UseStoreConnectionString(string connectionString)
+            {
+                _configuration._connectionStringProvider = (_configuration._connectionStringProvider ?? new ConnectionStringProvider());
+                _configuration._connectionStringProvider.Store = connectionString;
+                return this;
+            }
         }
 
         private class IndexDefinition
@@ -117,7 +225,7 @@ namespace Driven
             public string Index { get; set; }
         }
 
-        public class ConnectionStringProvider
+        private class ConnectionStringProvider
         {
             public ConnectionStringProvider()
             {

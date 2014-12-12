@@ -3,6 +3,10 @@ using System.Threading.Tasks;
 
 namespace Driven.SampleDomain.Services
 {
+    /// <summary>
+    /// Repositories will interact directly with domain aggregates/entities and so will declare
+    /// methods that reference core domain types (aggregates, entities, value types).
+    /// </summary>
     public interface IProductRepository
     {
         Task RemoveAsync(Product product);
@@ -11,6 +15,6 @@ namespace Driven.SampleDomain.Services
         Task SaveAllAsync(IEnumerable<Product> products);
         Task<IEnumerable<Product>> AllProductsOfTenantAsync(TenantId tenantId);
         Task<Product> ProductOfIdAsync(TenantId tenantId, ProductId productId);
-        Task<IEnumerable<Product>> ProductsOfNameAsync(TenantId tenantId, string name);
+        Task<IEnumerable<Product>> ProductsOfNameAsync(TenantId tenantId, ProductName name);
     }
 }

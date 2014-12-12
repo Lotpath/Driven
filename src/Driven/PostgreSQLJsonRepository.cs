@@ -19,12 +19,12 @@ namespace Driven
             _connectionString = _configuration.StoreConnectionString;
         }
 
-        public async Task DeleteAsync(IIdentifiable<long> aggregate)
+        public async Task DeleteAsync(object aggregate)
         {
             await DeleteAsync(new[] {aggregate});
         }
 
-        public async Task DeleteAsync(IEnumerable<IIdentifiable<long>> aggregates)
+        public async Task DeleteAsync(IEnumerable<object> aggregates)
         {
             try
             {
@@ -44,12 +44,12 @@ namespace Driven
             }
         }
 
-        public async Task SaveAsync(IIdentifiable<long> aggregate)
+        public async Task SaveAsync(object aggregate)
         {
             await SaveAsync(new[] {aggregate});
         }
 
-        public async Task SaveAsync(IEnumerable<IIdentifiable<long>> aggregates)
+        public async Task SaveAsync(IEnumerable<object> aggregates)
         {
             try
             {
@@ -57,7 +57,7 @@ namespace Driven
                 {
                     foreach (var aggregate in aggregates)
                     {
-                        if (aggregate.IsUnidentified())
+                        if (IsUnidentified(aggregate))
                         {
                             await InsertAsync(uow, aggregate);
                         }
@@ -76,19 +76,19 @@ namespace Driven
             }
         }
 
-        private async Task DeleteAsync(UnitOfWork unitOfWork, IIdentifiable<long> aggregate)
+        private async Task DeleteAsync(UnitOfWork unitOfWork, object aggregate)
         {
             var tableName = GetTableName(aggregate.GetType());
 
             var commandText = string.Format("delete from {0} where id = @0", tableName);
 
-            using (var command = unitOfWork.CreateCommand(commandText, aggregate.Identity()))
+            using (var command = unitOfWork.CreateCommand(commandText, GetIdentity(aggregate)))
             {
                 await command.ExecuteNonQueryAsync();
             }
         }
 
-        private async Task InsertAsync(UnitOfWork unitOfWork, IIdentifiable<long> aggregate)
+        private async Task InsertAsync(UnitOfWork unitOfWork, object aggregate)
         {
             var tableName = GetTableName(aggregate.GetType());
 
@@ -102,7 +102,7 @@ namespace Driven
             }
         }
 
-        private async Task UpdateAsync(UnitOfWork unitOfWork, IIdentifiable<long> aggregate)
+        private async Task UpdateAsync(UnitOfWork unitOfWork, object aggregate)
         {
             var tableName = GetTableName(aggregate.GetType());
 
@@ -110,7 +110,7 @@ namespace Driven
 
             var commandText = string.Format("update {0} set data = @0 where id = @1", tableName);
 
-            using (var command = unitOfWork.CreateCommand(commandText, json, aggregate.Identity()))
+            using (var command = unitOfWork.CreateCommand(commandText, json, GetIdentity(aggregate)))
             {
                 await command.ExecuteNonQueryAsync();
             }
@@ -165,7 +165,6 @@ namespace Driven
         }
 
         public async Task<IEnumerable<T>> FindAllAsync<T>(string filter, string orderBy, params object[] args)
-            where T : IIdentifiable<long>
         {
             var aggregates = new List<T>();
 
@@ -189,7 +188,7 @@ namespace Driven
 
                             var aggregate = _serializer.Deserialize<T>(json);
 
-                            aggregate.Identity(identity);
+                            SetIdentity(aggregate, identity);
 
                             aggregates.Add(aggregate);
                         }
@@ -205,7 +204,6 @@ namespace Driven
         }
 
         public async Task<T> FindOneAsync<T>(string filter, params object[] args)
-            where T : IIdentifiable<long>
         {
             var aggregates = await FindAllAsync<T>(filter, "", args);
 
@@ -222,6 +220,24 @@ namespace Driven
         private string GetTableName(Type type)
         {
             return _configuration.GetTableName(type);
+        }
+
+        private long GetIdentity(object aggregate)
+        {
+            var adapter = _configuration.GetIdAdapter(aggregate.GetType());
+            return adapter.GetIdentity(aggregate);
+        }
+
+        private void SetIdentity(object aggregate, long identity)
+        {
+            var adapter = _configuration.GetIdAdapter(aggregate.GetType());
+            adapter.SetIdentity(aggregate, identity);
+        }
+
+        private bool IsUnidentified(object aggregate)
+        {
+            var adapter = _configuration.GetIdAdapter(aggregate.GetType());
+            return adapter.IsUnidentified(aggregate);
         }
     }
 }

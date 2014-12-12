@@ -53,7 +53,6 @@
     </Compile>
     <Compile Include="DatabaseBootstrapper.cs" />
     <Compile Include="PersistenceConfiguration.cs" />
-    <Compile Include="IIdentifiable.cs" />
     <Compile Include="ISerializer.cs" />
     <Compile Include="NewtonsoftJsonSerializer.cs" />
     <Compile Include="NpgsqlConnectionExtensions.cs" />
