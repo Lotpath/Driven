@@ -4,7 +4,7 @@
     {
         private readonly TenantId _tenantId;
         private readonly ProductId _productId;
-        private readonly ProductName _productName;
+        private ProductName _productName;
 
         public Product(TenantId tenantId, ProductId productId, ProductName productName)
         {

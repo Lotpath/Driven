@@ -22,14 +22,30 @@ namespace Driven.Repl
             _manager = new ProductManager(productRepo);
         }
 
-        public async Task BootstrapDatabase()
+        public async Task FullBattery()
         {
-            var timer = new Timer();
+            await InitializeDatabase();
+            await TearDownDatabase();
+            await BootstrapDatabase();
+            //await CreateAndFetchOneThousandProducts();
+            //await FetchAllProductsForTenant();
+            //await FetchAllProductsByName();
+            await ChangeProductNameAndRefetchByName();
+        }
 
+        public async Task InitializeDatabase()
+        {
             if (!await _bootstrapper.StoreExists())
             {
                 await _bootstrapper.InitializeStore();
             }
+        }
+
+        public async Task BootstrapDatabase()
+        {
+            var timer = new Timer();
+
+            InitializeDatabase();
 
             await _bootstrapper.EnsureSchemaIsUpToDate();
 
@@ -45,7 +61,7 @@ namespace Driven.Repl
             Console.WriteLine("Completed: " + timer.Interval);
         }
 
-        public async Task LoadAndFetchOneThousandProducts()
+        public async Task CreateAndFetchOneThousandProducts()
         {
             var ids = new List<string>();
 
@@ -69,17 +85,27 @@ namespace Driven.Repl
             Console.WriteLine("Average load time: {0:0.0000} seconds", interval.TotalSeconds / itemCount);
         }
 
-        public async Task LoadAllProductsForTenant()
+        public async Task FetchAllProductsForTenant()
         {
             var timer = new Timer();
             await _manager.LoadAllAsync(Guid.Empty.ToString());
             Console.WriteLine("Time to load all: {0}", timer.Interval);            
         }
 
-        public async Task LoadAllProductsByName()
+        public async Task FetchAllProductsByName()
         {
             var timer = new Timer();
             await _manager.FindAsync(Guid.Empty.ToString(), "widgets");
+            Console.WriteLine("Time to find by name: {0}", timer.Interval);
+        }
+
+        public async Task ChangeProductNameAndRefetchByName()
+        {
+            var timer = new Timer();
+            var id = await _manager.CreateNewAsync(Guid.Empty.ToString(), "woot");
+            await _manager.ChangeName(Guid.Empty.ToString(), id, "woohoo");
+            await _manager.FindAsync(Guid.Empty.ToString(), "woot");
+            await _manager.FindAsync(Guid.Empty.ToString(), "woohoo");
             Console.WriteLine("Time to find by name: {0}", timer.Interval);
         }
     }

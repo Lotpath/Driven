@@ -1,5 +1,9 @@
 ﻿namespace Driven.SampleDomain
 {
+    /// <summary>
+    /// An entity implementation provides a shared layer class for all of your
+    /// aggregates.
+    /// </summary>
     public abstract class Entity
     {
         private long _surrogateIdentity;

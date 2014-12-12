@@ -1,5 +1,4 @@
-﻿using System.Data;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Npgsql;
 
 namespace Driven
@@ -21,15 +20,8 @@ namespace Driven
             {
                 await conn.OpenAsync();
 
-                using (var cmd = conn.CreateCommand())
+                using (var cmd = conn.CreateCommand("select count(*) from pg_catalog.pg_database where datname=@0", storeDatabaseName))
                 {
-                    cmd.CommandText = "select count(*) from pg_catalog.pg_database where datname=:dbname";
-                    var p = cmd.CreateParameter();
-                    p.ParameterName = "dbname";
-                    p.DbType = DbType.AnsiString;
-                    p.Value = storeDatabaseName;
-                    cmd.Parameters.Add(p);
-                    cmd.CommandType = CommandType.Text;
                     return (long)await cmd.ExecuteScalarAsync() != 0;
                 }
             }
@@ -43,9 +35,8 @@ namespace Driven
             {
                 await conn.OpenAsync();
 
-                using (var comm = conn.CreateCommand())
+                using (var comm = conn.CreateCommand(string.Format("create database \"{0}\"", storeDatabaseName)))
                 {
-                    comm.CommandText = string.Format("create database \"{0}\"", storeDatabaseName);
                     await comm.ExecuteNonQueryAsync();
                 }
             }
@@ -59,20 +50,16 @@ namespace Driven
 
                 using (var tran = conn.BeginTransaction())
                 {
-                    using (var cmd = conn.CreateCommand())
+                    using (var cmd = conn.CreateCommand("drop schema public cascade"))
                     {
                         cmd.Transaction = tran;
-
-                        cmd.CommandText = "drop schema public cascade";
 
                         await cmd.ExecuteNonQueryAsync();
                     }
 
-                    using (var cmd = conn.CreateCommand())
+                    using (var cmd = conn.CreateCommand("create schema public authorization postgres"))
                     {
                         cmd.Transaction = tran;
-
-                        cmd.CommandText = "create schema public authorization postgres";
 
                         await cmd.ExecuteNonQueryAsync();
                     }
@@ -98,25 +85,6 @@ namespace Driven
                     foreach (var index in _configuration.GetIndexDefinitions())
                     {
                         await EnsureIndexExists(conn, tran, index.Key, index.Value);
-                    }
-
-                    tran.Commit();
-                }
-            }
-        }
-
-        public async Task ExecuteSql(string sql, params object[] args)
-        {
-            using (var conn = new NpgsqlConnection(_configuration.StoreConnectionString))
-            {
-                await conn.OpenAsync();
-
-                using (var tran = conn.BeginTransaction())
-                {
-                    using (var cmd = conn.CreateCommand(sql, args))
-                    {
-                        cmd.Transaction = tran;
-                        cmd.ExecuteNonQuery();
                     }
 
                     tran.Commit();

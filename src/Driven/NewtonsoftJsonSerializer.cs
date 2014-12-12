@@ -12,25 +12,23 @@ namespace Driven
         private readonly JsonSerializerSettings _settings;
 
         public NewtonsoftJsonSerializer()
-            : this(ApplyDefaultConfiguration)
+            : this(null)
         {
         }
 
-        public NewtonsoftJsonSerializer(Action<JsonSerializerSettings> cfg)
+        public NewtonsoftJsonSerializer(Action<NewtonsoftJsonSerializerConfigurer> cfg)
         {
             _settings = new JsonSerializerSettings();
+            _settings.TypeNameHandling = TypeNameHandling.All;
+            _settings.Formatting = Formatting.None;
+            _settings.ContractResolver = new PrivateFieldsContractResolver();
+
+            var configurer = new NewtonsoftJsonSerializerConfigurer(this);
 
             if (cfg != null)
             {
-                cfg(_settings);
+                cfg(configurer);
             }
-        }
-
-        private static void ApplyDefaultConfiguration(JsonSerializerSettings settings)
-        {
-            settings.TypeNameHandling = TypeNameHandling.All;
-            settings.Formatting = Formatting.None;
-            settings.ContractResolver = new PrivateFieldsContractResolver();
         }
 
         public T Deserialize<T>(string json)
@@ -61,6 +59,40 @@ namespace Driven
                 }
 
                 return properties;
+            }
+        }
+
+        public class NewtonsoftJsonSerializerConfigurer
+        {
+            private readonly NewtonsoftJsonSerializer _serializer;
+
+            protected internal NewtonsoftJsonSerializerConfigurer(NewtonsoftJsonSerializer serializer)
+            {
+                _serializer = serializer;
+            }
+
+            public NewtonsoftJsonSerializerConfigurer UseDefaultDrivenPrivateFieldsContractResolver()
+            {
+                _serializer._settings.ContractResolver = new PrivateFieldsContractResolver();
+                return this;
+            }
+
+            public NewtonsoftJsonSerializerConfigurer UseDefaultNewtonsoftJsonContractResolver()
+            {
+                _serializer._settings.ContractResolver = new DefaultContractResolver();
+                return this;
+            }    
+            
+            public NewtonsoftJsonSerializerConfigurer UseCamelCasePropertyNamesContractResolver()
+            {
+                _serializer._settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                return this;
+            }
+
+            public NewtonsoftJsonSerializerConfigurer UseContractResolver(IContractResolver resolver)
+            {
+                _serializer._settings.ContractResolver = resolver;
+                return this;
             }
         }
     }

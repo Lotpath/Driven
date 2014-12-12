@@ -8,7 +8,10 @@ namespace Driven.SampleDomain.Services
     /// should not expose or reference core domain types (aggregates, entities, value types). As a rule
     /// of thumb, a Manager should only modify one aggregate per method called and should not perform
     /// any business logic, delegating instead to aggregates and value objects for the enforcement of 
-    /// business rules and logic.
+    /// business rules and the performing of logic.
+    /// 
+    /// A Manager can orchestrate an interaction between multiple aggregates, but again, should typically
+    /// only modify the state of a single aggregate per method call (per Repository transaction).
     /// 
     /// A Manager can be designed in one of two ways depending on whether you want to build an
     /// Anti Corruption Layer (ACL) directly into your core domain, or delegate this task to the client of
@@ -53,6 +56,18 @@ namespace Driven.SampleDomain.Services
         public async Task FindAsync(string tenantId, string name)
         {
             var product = await _repository.ProductsOfNameAsync(new TenantId(tenantId), new ProductName(name));
+        }
+
+        public async Task ChangeName(string tenantId, string productId, string newName)
+        {
+            // Example of keeping Entities immutable by creating a new entity instead of exposing state change methods
+
+            var existing = await _repository.ProductOfIdAsync(new TenantId(tenantId), new ProductId(productId));
+            var updated = new Product(new TenantId(tenantId), new ProductId(productId), new ProductName(newName));
+            // set the surrogate identity of the new entity to match the original so
+            // the original is overwritten with the new state
+            updated.SetIdentity(existing.GetIdentity()); 
+            await _repository.SaveAsync(updated);
         }
     }
 }
