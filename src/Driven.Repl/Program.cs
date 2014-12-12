@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
-using Driven.SampleDomain;
-using Driven.SampleDomain.Services;
 
 namespace Driven.Repl
 {
@@ -16,80 +15,38 @@ namespace Driven.Repl
 
         private static async Task Run()
         {
-            var configuration = new PersistenceConfiguration(
-                cfg =>
+            var app = new App();
+            var methods = typeof(App).GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
+
+            do
+            {
+                Console.WriteLine("Enter a command:");
+
+                var response = Console.ReadLine();
+
+                if (response == "q" || response == "Q")
+                {
+                    break;
+                }
+
+                var method = methods.SingleOrDefault(x => x.Name == response);
+
+                if (method == null)
+                {
+                    Console.WriteLine("Unknown method " + response + ". Allowed methods are:");
+                    foreach (var m in methods)
                     {
-                        cfg.UseConnectionStringsFromAppConfig();
-                        cfg.Serializer(new NewtonsoftJsonSerializer());
-                        cfg.Map<Product>("tbl_products")
-                           .Index<Product>("tbl_products_tenant_id_product_id_index",
-                                           "((data->'_tenantId'->>'_id'), (data->'_productId'->>'_id'))");
-                    });
+                        Console.WriteLine(m.Name);
+                    }
+                    continue;
+                }
 
-            var bootstrapper = new DatabaseBootstrapper(configuration);
+                var task = (Task)method.Invoke(app, new object[0]);
 
-            if (!await bootstrapper.StoreExists())
-            {
-                await bootstrapper.InitializeStore();
-            }
+                await Task.WhenAll(task);
 
-            await bootstrapper.TearDownStore();
+            } while (true);
 
-            await bootstrapper.EnsureSchemaIsUpToDate();
-
-            var repo = new PostgreSQLJsonRepository(configuration);
-            var productRepo = new PostgreSQLJsonProductRepository(repo);
-            var productManager = new ProductManager(productRepo);
-
-            var ids = new List<string>();
-
-            var itemCount = 1000;
-            for (int i = 0; i < itemCount; i++)
-            {
-                var id = await productManager.CreateNewAsync(Guid.Empty.ToString(), "widgets");
-
-                ids.Add(id);
-
-                Console.WriteLine("{0:00000} - {1}", i, id);
-            }
-
-            var timer = new Timer();
-            foreach (var id in ids)
-            {
-                await productManager.LoadAsync(Guid.Empty.ToString(), id);
-            }
-            var interval = timer.Interval;
-            Console.WriteLine("Time to load each individually: {0}", interval);
-            Console.WriteLine("Average load time: {0:0.0000} seconds", interval.TotalSeconds / itemCount);
-
-            timer.Restart();
-            await productManager.LoadAllAsync(Guid.Empty.ToString());
-            Console.WriteLine("Time to load all: {0}", timer.Interval);
-
-            timer.Restart();
-            await productManager.FindAsync(Guid.Empty.ToString(), "widgets");
-            Console.WriteLine("Time to find by name: {0}", timer.Interval);
-
-            //await bootstrapper.TearDownStore();
-
-            Console.WriteLine("Press a key to exit...");
-            Console.ReadKey();
-        }
-    }
-
-    public class Timer
-    {
-        public Timer()
-        {
-            Start = DateTime.UtcNow;
-        }
-
-        public DateTime Start { get; private set; }
-        public TimeSpan Interval { get { return DateTime.UtcNow - Start; } }
-
-        public void Restart()
-        {
-            Start = DateTime.UtcNow;
         }
     }
 }
