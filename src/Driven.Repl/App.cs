@@ -27,9 +27,9 @@ namespace Driven.Repl
             await InitializeDatabase();
             await TearDownDatabase();
             await BootstrapDatabase();
-            //await CreateAndFetchOneThousandProducts();
-            //await FetchAllProductsForTenant();
-            //await FetchAllProductsByName();
+            await CreateAndFetchOneThousandProducts();
+            await FetchAllProductsForTenant();
+            await FetchAllProductsByName();
             await ChangeProductNameAndRefetchByName();
         }
 
@@ -45,7 +45,7 @@ namespace Driven.Repl
         {
             var timer = new Timer();
 
-            InitializeDatabase();
+            await InitializeDatabase();
 
             await _bootstrapper.EnsureSchemaIsUpToDate();
 
