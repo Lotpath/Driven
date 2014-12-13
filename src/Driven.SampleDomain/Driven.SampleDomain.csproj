@@ -35,7 +35,8 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Entity.cs" />
+    <Compile Include="Aggregate.cs" />
+    <Compile Include="Identifiable.cs" />
     <Compile Include="Product.cs" />
     <Compile Include="Services\IProductRepository.cs" />
     <Compile Include="ProductId.cs" />

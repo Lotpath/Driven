@@ -65,6 +65,8 @@ namespace Driven
                         {
                             await UpdateAsync(uow, aggregate);
                         }
+
+                        await InsertEventsAsync(uow, aggregate);
                     }
 
                     uow.Commit();
@@ -113,6 +115,25 @@ namespace Driven
             using (var command = unitOfWork.CreateCommand(commandText, json, GetIdentity(aggregate)))
             {
                 await command.ExecuteNonQueryAsync();
+            }
+        }
+
+        private async Task InsertEventsAsync(UnitOfWork unitOfWork, object aggregate)
+        {
+            var tableName = GetEventsTableName();
+
+            var appliedEvents = GetAppliedEvents(aggregate);
+
+            var commandText = string.Format("insert into {0} (data) values (@0)", tableName);
+
+            foreach (var appliedEvent in appliedEvents)
+            {
+                var json = _serializer.Serialize(appliedEvent);
+
+                using (var command = unitOfWork.CreateCommand(commandText, json))
+                {
+                    await command.ExecuteNonQueryAsync();
+                }
             }
         }
 
@@ -217,9 +238,20 @@ namespace Driven
             return connection;
         }
         
+        private IEnumerable<object> GetAppliedEvents(object aggregate)
+        {
+            var adapter = _configuration.GetEventSourceAdapter();
+            return adapter.AppliedEvents(aggregate);
+        }
+
         private string GetTableName(Type type)
         {
             return _configuration.GetTableName(type);
+        }
+
+        private string GetEventsTableName()
+        {
+            return _configuration.GetEventsTableName();
         }
 
         private long GetIdentity(object aggregate)
@@ -238,6 +270,11 @@ namespace Driven
         {
             var adapter = _configuration.GetIdAdapter(aggregate.GetType());
             return adapter.IsUnidentified(aggregate);
+        }
+
+        private IEnumerable<object> AppliedEvents(object aggregate)
+        {
+            return new object[0];
         }
     }
 }

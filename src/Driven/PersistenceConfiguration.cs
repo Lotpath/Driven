@@ -3,86 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Linq;
-using System.Reflection;
 
 namespace Driven
 {
-    public interface IIdentityAdapter
-    {
-        void SetIdentity(object target, long value);
-        long GetIdentity(object target);
-        bool IsUnidentified(object target);
-    }
-
-    public class ReflectionIdentityAdapter : IIdentityAdapter
-    {
-        private readonly IIdentityAdapter _adapter;
-
-        public ReflectionIdentityAdapter(Type type)
-        {
-            var methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
-            var get = methods.SingleOrDefault(x => x.Name == "GetIdentity");
-            var set = methods.SingleOrDefault(x => x.Name == "SetIdentity");
-
-            if (get == null || get.ReturnType != typeof(long))
-            {
-                throw new ArgumentException("Method with signature 'long GetIdentity()' not found");
-            }
-
-            if (set == null || set.GetParameters().ToList()[0].ParameterType != typeof(long))
-            {
-                throw new ArgumentException("Method with signature 'SetIdentity(long)' not found");
-            }
-
-            _adapter = new DelegateIdentityAdapter(
-                o => (long) get.Invoke(o, new object[0]),
-                (o, id) => set.Invoke(o, new object[] {id}));
-        }
-
-        public void SetIdentity(object target, long value)
-        {
-            _adapter.SetIdentity(target, value);
-        }
-
-        public long GetIdentity(object target)
-        {
-            return _adapter.GetIdentity(target);
-        }
-
-        public bool IsUnidentified(object target)
-        {
-            return _adapter.IsUnidentified(target);
-        }
-    }
-
-    public class DelegateIdentityAdapter : IIdentityAdapter
-    {
-        private Action<object, long> _setIdentity;
-        private Func<object, long> _getIdentity;
-
-        public DelegateIdentityAdapter(Func<object, long> getIdentity, Action<object, long> setIdentity)
-        {
-            _getIdentity = getIdentity;
-            _setIdentity = setIdentity;
-        }
-
-        public void SetIdentity(object target, long value)
-        {
-            _setIdentity(target, value);
-        }
-
-        public long GetIdentity(object target)
-        {
-            return _getIdentity(target);
-        }
-
-        public bool IsUnidentified(object target)
-        {
-            return GetIdentity(target) <= 0;
-        }
-    }
-
     public class PersistenceConfiguration
     {
         private readonly Dictionary<Type, string> _entityTypeToTableNameMappings
@@ -97,6 +20,9 @@ namespace Driven
         private ISerializer _serializer;
         private ConnectionStringProvider _connectionStringProvider;
 
+        private string _eventsTableName = "events";
+        private IEventSourceAdapter _eventSourceAdapter = new ReflectionEventSourceAdapter();
+
         public PersistenceConfiguration(Action<PersistenceConfigurationConfigurer> cfg)
         {
             if (cfg != null)
@@ -107,7 +33,9 @@ namespace Driven
 
         public IEnumerable<string> GetAllTableNames()
         {
-            return _entityTypeToTableNameMappings.Values;
+            var tableNames = _entityTypeToTableNameMappings.Values.ToList();
+            tableNames.Add(_eventsTableName);
+            return tableNames;
         }
 
         public IDictionary<string, string> GetIndexDefinitions()
@@ -135,6 +63,16 @@ namespace Driven
             return _idAdapters[type];
         }
 
+        public string GetEventsTableName()
+        {
+            return _eventsTableName;
+        }
+        
+        public IEventSourceAdapter GetEventSourceAdapter()
+        {
+            return _eventSourceAdapter;
+        }
+
         public string MasterConnectionString
         {
             get { return _connectionStringProvider.Master; }
@@ -154,6 +92,12 @@ namespace Driven
             protected internal PersistenceConfigurationConfigurer(PersistenceConfiguration configuration)
             {
                 _configuration = configuration;
+            }
+
+            public PersistenceConfigurationConfigurer Events<T>(string tableName, Func<T,IEnumerable<object>> appliedEvents)
+            {
+                _configuration._eventsTableName = tableName;
+                return this;
             }
 
             public PersistenceConfigurationConfigurer Map<T>(string tableName, Func<T, long> getId = null, Action<T, long> setId = null)
@@ -214,6 +158,12 @@ namespace Driven
             {
                 _configuration._connectionStringProvider = (_configuration._connectionStringProvider ?? new ConnectionStringProvider());
                 _configuration._connectionStringProvider.Store = connectionString;
+                return this;
+            }
+
+            public PersistenceConfigurationConfigurer EventsTableName(string eventTableName)
+            {
+                _configuration._eventsTableName = eventTableName;
                 return this;
             }
         }

@@ -38,7 +38,7 @@ namespace Driven.SampleDomain.Services
         public async Task<string> CreateNewAsync(string tenantId, string name)
         {
             var productId = new ProductId(Guid.NewGuid().ToString().ToUpperInvariant());
-            var product = new Product(new TenantId(tenantId), productId, new ProductName(name));
+            var product = Product.Create(new TenantId(tenantId), productId, new ProductName(name));
             await _repository.SaveAsync(product);
             return productId.Id();
         }
@@ -63,10 +63,9 @@ namespace Driven.SampleDomain.Services
             // Example of keeping Entities immutable by creating a new entity instead of exposing state change methods
 
             var existing = await _repository.ProductOfIdAsync(new TenantId(tenantId), new ProductId(productId));
-            var updated = new Product(new TenantId(tenantId), new ProductId(productId), new ProductName(newName));
-            // set the surrogate identity of the new entity to match the original so
-            // the original is overwritten with the new state
-            updated.SetIdentity(existing.GetIdentity()); 
+
+            var updated = existing.ChangeName(new ProductName(newName));
+
             await _repository.SaveAsync(updated);
         }
     }

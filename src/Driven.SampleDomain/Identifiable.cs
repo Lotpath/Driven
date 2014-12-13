@@ -1,14 +1,15 @@
 ﻿namespace Driven.SampleDomain
 {
     /// <summary>
-    /// An entity implementation provides a shared layer class for all of your
-    /// aggregates.
+    /// An identifiable implementation provides a shared layer class so that persisted
+    /// domain objects can have a surrogate identity assigned to them in the persistence
+    /// service.
     /// </summary>
-    public abstract class Entity
+    public abstract class Identifiable
     {
         private long _surrogateIdentity;
 
-        protected Entity()
+        protected Identifiable()
         {
             SetIdentity(0);
         }
@@ -35,7 +36,7 @@
 
         public override bool Equals(object obj)
         {
-            var typed = obj as Entity;
+            var typed = obj as Identifiable;
             if (typed == null || (GetType() != typed.GetType()))
             {
                 return false;
