@@ -106,6 +106,11 @@ namespace Driven
                 }
             }
 
+            await CreateTableAndDefaultIndex(conn, tran, tableName);
+        }
+
+        private async Task CreateTableAndDefaultIndex(NpgsqlConnection conn, NpgsqlTransaction tran, string tableName)
+        {
             using (var cmd = conn.CreateCommand(string.Format("create table {0} (id bigserial primary key, data jsonb not null);", tableName)))
             {
                 cmd.Transaction = tran;
@@ -113,11 +118,7 @@ namespace Driven
                 await cmd.ExecuteNonQueryAsync();
             }
 
-            // by default use only the '@>' jsonb operator
-            // see: http://www.postgresql.org/docs/9.4/static/datatype-json.html#JSON-INDEXING
-            // for explanation of why 'jsonb_path_ops' parameter is specified when creating the gin index on the jsonb data column
-
-            using (var cmd = conn.CreateCommand(string.Format("CREATE INDEX {0}_data_gin_index ON {0} USING gin (data jsonb_path_ops);", tableName)))
+            using (var cmd = conn.CreateCommand(string.Format("CREATE INDEX {0}_data_gin_index ON {0} USING gin (data);", tableName)))
             {
                 cmd.Transaction = tran;
 
