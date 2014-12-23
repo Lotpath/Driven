@@ -11,6 +11,9 @@ namespace Driven
         private readonly Dictionary<Type, string> _entityTypeToTableNameMappings
             = new Dictionary<Type, string>();
 
+        private readonly List<IndexDefinition> _indexDefinitions
+            = new List<IndexDefinition>();
+
         private readonly Dictionary<Type, IIdentityAdapter> _idAdapters
             = new Dictionary<Type, IIdentityAdapter>();
 
@@ -35,6 +38,16 @@ namespace Driven
             return tableNames;
         }
 
+        public IDictionary<string, string> GetIndexDefinitions()
+        {
+            return new ReadOnlyDictionary<string, string>(
+                _indexDefinitions
+                    .ToDictionary(
+                        x => x.IndexName,
+                        x => string.Format("CREATE INDEX {0} ON {1} {2}",
+                                           x.IndexName, x.TableName, x.Index)));
+        }
+
         public string GetTableName(Type type)
         {
             return _entityTypeToTableNameMappings[type];
@@ -54,7 +67,7 @@ namespace Driven
         {
             return _eventsTableName;
         }
-        
+
         public IEventSourceAdapter GetEventSourceAdapter()
         {
             return _eventSourceAdapter;
@@ -81,7 +94,7 @@ namespace Driven
                 _configuration = configuration;
             }
 
-            public PersistenceConfigurationConfigurer Events<T>(string tableName, Func<T,IEnumerable<object>> appliedEvents)
+            public PersistenceConfigurationConfigurer Events<T>(string tableName, Func<T, IEnumerable<object>> appliedEvents)
             {
                 _configuration._eventsTableName = tableName;
                 return this;
@@ -96,8 +109,8 @@ namespace Driven
                 else if (getId != null && setId != null)
                 {
                     _configuration._idAdapters
-                                  .Add(typeof (T),
-                                       new DelegateIdentityAdapter(o => getId((T) o), (o, id) => setId((T) o, id)));
+                                  .Add(typeof(T),
+                                       new DelegateIdentityAdapter(o => getId((T)o), (o, id) => setId((T)o, id)));
                 }
                 else
                 {
@@ -105,7 +118,20 @@ namespace Driven
                 }
 
                 _configuration._entityTypeToTableNameMappings.Add(typeof(T), tableName);
-                
+
+                return this;
+            }
+
+            public PersistenceConfigurationConfigurer Index<T>(string indexName, string index)
+            {
+                var tableName = _configuration.GetTableName<T>();
+                var definition = new IndexDefinition
+                    {
+                        TableName = tableName,
+                        IndexName = indexName,
+                        Index = index
+                    };
+                _configuration._indexDefinitions.Add(definition);
                 return this;
             }
 
@@ -123,7 +149,7 @@ namespace Driven
 
             public PersistenceConfigurationConfigurer UseMasterConnectionString(string connectionString)
             {
-                _configuration._connectionStringProvider = (_configuration._connectionStringProvider ??new ConnectionStringProvider());
+                _configuration._connectionStringProvider = (_configuration._connectionStringProvider ?? new ConnectionStringProvider());
                 _configuration._connectionStringProvider.Master = connectionString;
                 return this;
             }
@@ -140,6 +166,13 @@ namespace Driven
                 _configuration._eventsTableName = eventTableName;
                 return this;
             }
+        }
+
+        private class IndexDefinition
+        {
+            public string TableName { get; set; }
+            public string IndexName { get; set; }
+            public string Index { get; set; }
         }
 
         private class ConnectionStringProvider

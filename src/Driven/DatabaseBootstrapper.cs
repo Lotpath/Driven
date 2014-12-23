@@ -82,6 +82,11 @@ namespace Driven
                         await EnsureTableExists(conn, tran, tableName);
                     }
 
+                    foreach (var index in _configuration.GetIndexDefinitions())
+                    {
+                        await EnsureIndexExists(conn, tran, index.Key, index.Value);
+                    }
+
                     tran.Commit();
                 }
             }
@@ -92,7 +97,7 @@ namespace Driven
             using (var cmd = conn.CreateCommand("select count(*) from information_schema.tables where table_schema='public' and table_name=:0", tableName))
             {
                 cmd.Transaction = tran;
-                
+
                 var exists = (long)await cmd.ExecuteScalarAsync() != 0;
 
                 if (exists)
@@ -108,11 +113,33 @@ namespace Driven
                 await cmd.ExecuteNonQueryAsync();
             }
 
-            // we only indend to use the '@>' jsonb operator
+            // by default use only the '@>' jsonb operator
             // see: http://www.postgresql.org/docs/9.4/static/datatype-json.html#JSON-INDEXING
             // for explanation of why 'jsonb_path_ops' parameter is specified when creating the gin index on the jsonb data column
 
             using (var cmd = conn.CreateCommand(string.Format("CREATE INDEX {0}_data_gin_index ON {0} USING gin (data jsonb_path_ops);", tableName)))
+            {
+                cmd.Transaction = tran;
+
+                await cmd.ExecuteNonQueryAsync();
+            }
+        }
+
+        private async Task EnsureIndexExists(NpgsqlConnection conn, NpgsqlTransaction tran, string indexName, string index)
+        {
+            using (var cmd = conn.CreateCommand("select count(*) from pg_indexes where schemaname='public' and indexname=:0", indexName))
+            {
+                cmd.Transaction = tran;
+
+                var exists = (long)await cmd.ExecuteScalarAsync() != 0;
+
+                if (exists)
+                {
+                    return;
+                }
+            }
+
+            using (var cmd = conn.CreateCommand(index))
             {
                 cmd.Transaction = tran;
 

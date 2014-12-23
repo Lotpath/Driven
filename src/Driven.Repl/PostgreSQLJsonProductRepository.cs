@@ -66,5 +66,12 @@ namespace Driven.Repl
 
             return await _repository.FindAllAsync<Product>(filter, "");
         }
+
+        // for operations such as "like" we'll need a way to do string based where clauses. the jsonb '@>' will only give exact matches
+        //select * from products where data -> 'productName' ->> 'name' like 'widget1%' order by data -> 'productId'  offset 0 limit 10
+
+        // need to allow for where clauses
+        // need to allow for paging options (including sensible defaults)
+
     }
 }
