@@ -19,7 +19,7 @@ namespace Driven
         public NewtonsoftJsonSerializer(Action<NewtonsoftJsonSerializerConfigurer> cfg)
         {
             _settings = new JsonSerializerSettings();
-            _settings.TypeNameHandling = TypeNameHandling.All;
+            _settings.TypeNameHandling = TypeNameHandling.None;
             _settings.Formatting = Formatting.None;
             _settings.ContractResolver = new PrivateFieldsContractResolver();
 
@@ -59,6 +59,15 @@ namespace Driven
                 }
 
                 return properties;
+            }
+
+            protected override string ResolvePropertyName(string propertyName)
+            {
+                if (propertyName.StartsWith("_"))
+                {
+                    return propertyName.Substring(1);
+                }
+                return base.ResolvePropertyName(propertyName);
             }
         }
 

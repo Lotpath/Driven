@@ -11,9 +11,6 @@ namespace Driven
         private readonly Dictionary<Type, string> _entityTypeToTableNameMappings
             = new Dictionary<Type, string>();
 
-        private readonly List<IndexDefinition> _indexDefinitions
-            = new List<IndexDefinition>();
-
         private readonly Dictionary<Type, IIdentityAdapter> _idAdapters
             = new Dictionary<Type, IIdentityAdapter>();
 
@@ -36,16 +33,6 @@ namespace Driven
             var tableNames = _entityTypeToTableNameMappings.Values.ToList();
             tableNames.Add(_eventsTableName);
             return tableNames;
-        }
-
-        public IDictionary<string, string> GetIndexDefinitions()
-        {
-            return new ReadOnlyDictionary<string, string>(
-                _indexDefinitions
-                    .ToDictionary(
-                        x => x.IndexName,
-                        x => string.Format("CREATE INDEX {0} ON {1} {2}",
-                                           x.IndexName, x.TableName, x.Index)));
         }
 
         public string GetTableName(Type type)
@@ -122,19 +109,6 @@ namespace Driven
                 return this;
             }
 
-            public PersistenceConfigurationConfigurer Index<T>(string indexName, string index)
-            {
-                var tableName = _configuration.GetTableName<T>();
-                var definition = new IndexDefinition
-                    {
-                        TableName = tableName,
-                        IndexName = indexName,
-                        Index = index
-                    };
-                _configuration._indexDefinitions.Add(definition);
-                return this;
-            }
-
             public PersistenceConfigurationConfigurer Serializer(ISerializer serializer)
             {
                 _configuration._serializer = serializer;
@@ -166,13 +140,6 @@ namespace Driven
                 _configuration._eventsTableName = eventTableName;
                 return this;
             }
-        }
-
-        private class IndexDefinition
-        {
-            public string TableName { get; set; }
-            public string IndexName { get; set; }
-            public string Index { get; set; }
         }
 
         private class ConnectionStringProvider

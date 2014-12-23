@@ -8,9 +8,7 @@ namespace Driven.Repl
         {            
             cfg.UseConnectionStringsFromAppConfig();
             cfg.Serializer(new NewtonsoftJsonSerializer());
-            cfg.Map<Product>("products")
-               .Index<Product>("products_tenant_id_product_id_index",
-                               "((data->'_tenantId'->>'_id'), (data->'_productId'->>'_id'))");
+            cfg.Map<Product>("products");
         }
     }
 }

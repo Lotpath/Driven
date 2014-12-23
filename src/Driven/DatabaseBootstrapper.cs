@@ -82,11 +82,6 @@ namespace Driven
                         await EnsureTableExists(conn, tran, tableName);
                     }
 
-                    foreach (var index in _configuration.GetIndexDefinitions())
-                    {
-                        await EnsureIndexExists(conn, tran, index.Key, index.Value);
-                    }
-
                     tran.Commit();
                 }
             }
@@ -106,29 +101,18 @@ namespace Driven
                 }
             }
 
-            using (var cmd = conn.CreateCommand(string.Format("create table {0} (id bigserial primary key, data json not null);", tableName)))
+            using (var cmd = conn.CreateCommand(string.Format("create table {0} (id bigserial primary key, data jsonb not null);", tableName)))
             {
                 cmd.Transaction = tran;
 
                 await cmd.ExecuteNonQueryAsync();
             }
-        }
 
-        private async Task EnsureIndexExists(NpgsqlConnection conn, NpgsqlTransaction tran, string indexName, string index)
-        {
-            using (var cmd = conn.CreateCommand("select count(*) from pg_indexes where schemaname='public' and indexname=:0", indexName))
-            {
-                cmd.Transaction = tran;
+            // we only indend to use the '@>' jsonb operator
+            // see: http://www.postgresql.org/docs/9.4/static/datatype-json.html#JSON-INDEXING
+            // for explanation of why 'jsonb_path_ops' parameter is specified when creating the gin index on the jsonb data column
 
-                var exists = (long)await cmd.ExecuteScalarAsync() != 0;
-
-                if (exists)
-                {
-                    return;
-                }
-            }
-
-            using (var cmd = conn.CreateCommand(index))
+            using (var cmd = conn.CreateCommand(string.Format("CREATE INDEX {0}_data_gin_index ON {0} USING gin (data jsonb_path_ops);", tableName)))
             {
                 cmd.Transaction = tran;
 

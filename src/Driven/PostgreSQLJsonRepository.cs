@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Npgsql;
 
 namespace Driven
@@ -40,7 +41,7 @@ namespace Driven
             }
             catch (Exception ex)
             {
-                throw new PersistenceException("Cannot delete: " + ex.Message);
+                throw new PersistenceException("Cannot delete: " + ex.Message, ex);
             }
         }
 
@@ -74,7 +75,7 @@ namespace Driven
             }
             catch (Exception ex)
             {
-                throw new PersistenceException("Cannot save: " + ex.Message);
+                throw new PersistenceException("Cannot save: " + ex.Message, ex);
             }
         }
 
@@ -168,8 +169,6 @@ namespace Driven
 
                 command.Transaction = _transaction;
 
-                command.Prepare();
-
                 return command;
             }
 
@@ -185,21 +184,21 @@ namespace Driven
             }
         }
 
-        public async Task<IEnumerable<T>> FindAllAsync<T>(string filter, string orderBy, params object[] args)
+        public async Task<IEnumerable<T>> FindAllAsync<T>(object filter, string orderBy)
         {
             var aggregates = new List<T>();
 
             var tableName = GetTableName(typeof(T));
 
-            var query = string.Format("select id, data from {0} where {1} {2}", tableName, filter, orderBy);
+            var filterJson = JsonConvert.SerializeObject(filter);
+
+            var query = string.Format("select id, data from {0} where data @>'{1}'::jsonb {2}", tableName, filterJson, orderBy);
 
             try
             {
                 using (var conn = await OpenConnection())
-                using (var cmd = conn.CreateCommand(query, args))
+                using (var cmd = conn.CreateCommand(query))
                 {
-                    cmd.Prepare();
-
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -218,15 +217,15 @@ namespace Driven
             }
             catch (Exception ex)
             {
-                throw new PersistenceException("Cannot find: " + query + " because: " + ex.Message);
+                throw new PersistenceException("Cannot find: " + query + " because: " + ex.Message, ex);
             }
 
             return aggregates;
         }
 
-        public async Task<T> FindOneAsync<T>(string filter, params object[] args)
+        public async Task<T> FindOneAsync<T>(object filter)
         {
-            var aggregates = await FindAllAsync<T>(filter, "", args);
+            var aggregates = await FindAllAsync<T>(filter, "");
 
             return aggregates.FirstOrDefault();
         }

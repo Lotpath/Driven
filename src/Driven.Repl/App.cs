@@ -60,7 +60,7 @@ namespace Driven.Repl
             var itemCount = 1000;
             for (int i = 0; i < itemCount; i++)
             {
-                var id = await _manager.CreateNewAsync(Guid.Empty.ToString(), "widgets");
+                var id = await _manager.CreateNewAsync(Guid.Empty.ToString(), "widget" + (i+1));
 
                 ids.Add(id);
 
@@ -80,7 +80,7 @@ namespace Driven.Repl
 
         public async Task FetchAllProductsByName()
         {
-            await _manager.FindAsync(Guid.Empty.ToString(), "widgets");
+            await _manager.FindAsync(Guid.Empty.ToString(), "widget1");
         }
 
         public async Task ChangeProductNameAndRefetchByName()
