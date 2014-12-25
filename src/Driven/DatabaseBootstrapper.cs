@@ -111,7 +111,14 @@ namespace Driven
 
         private async Task CreateTableAndDefaultIndex(NpgsqlConnection conn, NpgsqlTransaction tran, string tableName)
         {
-            using (var cmd = conn.CreateCommand(string.Format("create table {0} (id bigserial primary key, data jsonb not null);", tableName)))
+            using (var cmd = conn.CreateCommand(string.Format("create table {0} (id bigserial primary key, header jsonb not null, data jsonb not null);", tableName)))
+            {
+                cmd.Transaction = tran;
+
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            using (var cmd = conn.CreateCommand(string.Format("CREATE INDEX {0}_header_gin_index ON {0} USING gin (header);", tableName)))
             {
                 cmd.Transaction = tran;
 

@@ -13,7 +13,7 @@ namespace Driven
             foreach (var arg in args)
             {
                 var p = command.CreateParameter();
-                p.ParameterName = string.Format("{0}", command.Parameters.Count);
+                p.ParameterName = string.Format("@{0}", command.Parameters.Count);
                 p.Value = arg;
                 command.Parameters.Add(p);
             }

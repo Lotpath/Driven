@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Npgsql;
@@ -95,11 +96,17 @@ namespace Driven
         {
             var tableName = GetTableName(aggregate.GetType());
 
-            var json = _serializer.Serialize(aggregate);
+            var headerJson = _serializer.Serialize(new Dictionary<string, object>
+                {
+                    {"createdOn", DateTimeOffset.UtcNow},
+                    {"createdBy", Thread.CurrentPrincipal.Identity.Name ?? ""}
+                });
 
-            var commandText = string.Format("insert into {0} (data) values (@0)", tableName);
+            var dataJson = _serializer.Serialize(aggregate);
 
-            using (var command = unitOfWork.CreateCommand(commandText, json))
+            var commandText = string.Format("insert into {0} (header, data) values (@0, @1)", tableName);
+
+            using (var command = unitOfWork.CreateCommand(commandText, headerJson, dataJson))
             {
                 await command.ExecuteNonQueryAsync();
             }
@@ -109,11 +116,17 @@ namespace Driven
         {
             var tableName = GetTableName(aggregate.GetType());
 
-            var json = _serializer.Serialize(aggregate);
+            var headerJson = _serializer.Serialize(new Dictionary<string, object>
+                {
+                    {"updatedOn", DateTimeOffset.UtcNow},
+                    {"updatedBy", Thread.CurrentPrincipal.Identity.Name ?? ""}
+                });
 
-            var commandText = string.Format("update {0} set data = @0 where id = @1", tableName);
+            var dataJson = _serializer.Serialize(aggregate);
 
-            using (var command = unitOfWork.CreateCommand(commandText, json, GetIdentity(aggregate)))
+            var commandText = string.Format("update {0} set header = @0, data = @1 where id = @2", tableName);
+
+            using (var command = unitOfWork.CreateCommand(commandText, headerJson, dataJson, GetIdentity(aggregate)))
             {
                 await command.ExecuteNonQueryAsync();
             }
@@ -125,13 +138,19 @@ namespace Driven
 
             var appliedEvents = GetAppliedEvents(aggregate);
 
-            var commandText = string.Format("insert into {0} (data) values (@0)", tableName);
+            var commandText = string.Format("insert into {0} (header, data) values (@0, @1)", tableName);
 
             foreach (var appliedEvent in appliedEvents)
             {
-                var json = _serializer.Serialize(appliedEvent);
+                var headerJson = _serializer.Serialize(new Dictionary<string, object>
+                {
+                    {"createdOn", DateTimeOffset.UtcNow},
+                    {"createdBy", Thread.CurrentPrincipal.Identity.Name ?? ""}
+                });
 
-                using (var command = unitOfWork.CreateCommand(commandText, json))
+                var dataJson = _serializer.Serialize(appliedEvent);
+
+                using (var command = unitOfWork.CreateCommand(commandText, headerJson, dataJson))
                 {
                     await command.ExecuteNonQueryAsync();
                 }
@@ -182,6 +201,12 @@ namespace Driven
                 _transaction.Dispose();
                 _connection.Dispose();
             }
+        }
+
+        public async Task<IEnumerable<T>> FindAllAsync<T>(string where, string orderBy, params object[] args)
+        {
+            // TODO: allow plain old where clause
+            throw new NotImplementedException("");
         }
 
         public async Task<IEnumerable<T>> FindAllAsync<T>(object filter, string orderBy)
